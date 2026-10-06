@@ -32,6 +32,10 @@ const stackClientAppLike = {
   getUser: async () => (signedOut() ? null : fakeUser),
   useUser,
   signOut: async () => {},
+  signInWithCredential: async (o: { email: string }) => {
+    (window as unknown as { __signedInAs?: string }).__signedInAs = o.email;
+    return { status: "ok" };
+  },
 };
 export class StackClientApp {
   constructor(_options?: unknown) {

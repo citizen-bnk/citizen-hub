@@ -42,7 +42,8 @@
     "components/Header.tsx",
     "components/Footer.tsx",
     "constants/default-theme.ts",
-    "index.css"
+    "index.css",
+    "app/auth/StackHandlerRoutes.tsx"
   ],
   "_hubOwned": "Paths under src/ that belong to the Hub and are never overwritten or followed by the script (files, or folders ending in /).",
   "_rootOwned": "Owned by the Hub, never copied: index.html, head.html, vite.config.ts, tailwind.config.js, tsconfig.json, package.json (the Hub's theme and build)."

@@ -17,7 +17,8 @@ The investor and board screens are carved out of the website into this repo and 
 **Seamless sign-in.** Signing in on the website with an investor or board role lands here with no second login when the
 Stack project trusts the parent domain (`**.citizenbank.co.ls`, so the session cookie is shared). A signed-out visit sends
 the person to the website sign-in and back. Any path the Hub does not own redirects to the same path on the website. On
-`*.vercel.app` (a public suffix) the shared cookie is not possible, so the demo asks once more.
+`*.vercel.app` (a public suffix) the shared cookie is not possible: a visitor who comes back from the website still signed out is
+sent to the Hub's own `/demo` page (a one-click picker of the demo accounts that open the Hub, or the normal Stack form outside the demo), so there is never a redirect loop.
 
 **How it is built.** `src/` is a copy of the website screens plus everything they import, produced by
 `node tools/carve-out.mjs ../CitizenBankWebsite` (config in `tools/carve-out.config.json`; `node tools/make-package.mjs

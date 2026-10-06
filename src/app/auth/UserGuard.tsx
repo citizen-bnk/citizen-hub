@@ -2,6 +2,7 @@ import { type CurrentInternalServerUser, type CurrentUser, useUser } from "@stac
 import type * as React from "react";
 import { createContext, useContext, useEffect } from "react";
 import { websiteUrl } from "../../hub/config";
+import { BOUNCE_PARAM, withParam, withoutParam } from "../../hub/signin";
 
 type UserGuardContextType = { user: CurrentUser | CurrentInternalServerUser };
 const UserGuardContext = createContext<UserGuardContextType | undefined>(undefined);
@@ -14,17 +15,26 @@ export const useUserGuardContext = () => {
 };
 
 /**
- * The Hub has no sign-in of its own. Someone who arrives signed out is sent to the website's sign-in and brought straight
- * back to this address; with the shared session (one Stack project, cookie on the parent domain) someone already signed in
- * on the website never sees this at all.
+ * Someone who arrives signed out is sent to the website's sign-in and brought straight back to this address; with the shared
+ * session (one Stack project, cookie on the parent domain) someone already signed in on the website never sees this.
+ * If they come back still signed out, the two sites do not share a session (for example both on vercel.app), so the Hub's
+ * own sign-in is used instead of bouncing for ever.
  */
 export const UserGuard = (props: { children: React.ReactNode }) => {
   const user = useUser();
   useEffect(() => {
-    if (!user) {
-      const back = encodeURIComponent(window.location.href);
-      window.location.replace(websiteUrl(`/auth/sign-in?after_auth_return_to=${back}`));
+    const here = window.location.href;
+    if (user) {
+      if (new URL(here).searchParams.has(BOUNCE_PARAM)) window.history.replaceState(null, "", withoutParam(here, BOUNCE_PARAM));
+      return;
     }
+    if (new URL(here).searchParams.has(BOUNCE_PARAM)) {
+      const back = encodeURIComponent(withoutParam(here, BOUNCE_PARAM));
+      window.location.replace(`/demo?after_auth_return_to=${back}`);
+      return;
+    }
+    const back = encodeURIComponent(withParam(here, BOUNCE_PARAM));
+    window.location.replace(websiteUrl(`/auth/sign-in?after_auth_return_to=${back}`));
   }, [user]);
   if (!user) {
     return (
