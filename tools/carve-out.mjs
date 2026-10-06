@@ -20,9 +20,11 @@ const SRC = path.join(website, "src");
 const isHubOwned = (rel) => cfg.hubOwned.some((p) => (p.endsWith("/") ? rel.startsWith(p) : rel === p));
 
 const exts = ["", ".tsx", ".ts", ".jsx", ".js", "/index.tsx", "/index.ts"];
+// Same order Vite uses (first match wins): "@/" is src/, so "@/components/ui/x" is src/components/ui/x. The shadcn
+// extension folders are only a fallback for imports that the website itself maps there.
 const alias = [
-  ["@/components/ui/", "extensions/shadcn/components/"], ["@/components/hooks/", "extensions/shadcn/hooks/"], ["@/hooks/", "extensions/shadcn/hooks/"],
   ["@/", ""], ["components/", "components/"], ["pages/", "pages/"], ["app/", "app/"], ["utils/", "utils/"],
+  ["@/components/ui/", "extensions/shadcn/components/"], ["@/components/hooks/", "extensions/shadcn/hooks/"], ["@/hooks/", "extensions/shadcn/hooks/"],
 ];
 function resolveImport(from, spec) {
   let base = null;
@@ -30,8 +32,14 @@ function resolveImport(from, spec) {
   else if (spec === "app") base = path.join(SRC, "app");
   else if (spec === "brain") base = path.join(SRC, "brain");
   else if (spec === "types") base = path.join(SRC, "apiclient/data-contracts");
-  else for (const [p, t] of alias) if (spec.startsWith(p)) { base = path.join(SRC, t + spec.slice(p.length)); break; }
-  if (!base) return null;
+  else {
+    for (const [p, t] of alias) {
+      if (!spec.startsWith(p)) continue;
+      const candidate = path.join(SRC, t + spec.slice(p.length));
+      for (const e of exts) { const f = candidate + e; if (fs.existsSync(f) && fs.statSync(f).isFile()) return f; }
+    }
+    return null;
+  }
   for (const e of exts) { const f = base + e; if (fs.existsSync(f) && fs.statSync(f).isFile()) return f; }
   return null;
 }

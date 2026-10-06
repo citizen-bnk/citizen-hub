@@ -1,4 +1,5 @@
 [
+  "@citizen-bnk/platform",
   "@radix-ui/react-checkbox",
   "@radix-ui/react-dialog",
   "@radix-ui/react-icons",
