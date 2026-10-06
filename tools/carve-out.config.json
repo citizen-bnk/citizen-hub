@@ -1,0 +1,49 @@
+{
+  "_note": "Pages moved from the website into the Hub. Add a page name here and run: node tools/carve-out.mjs <path to the website checkout>",
+  "pages": [
+    "MySubscriptions",
+    "BoardPortal",
+    "BoardDocuments",
+    "BoardMeetings",
+    "MeetingDetails"
+  ],
+  "base": [
+    "main.tsx",
+    "AppWrapper.tsx",
+    "router.tsx",
+    "vite-env.d.ts",
+    "index.css",
+    "components/AppProvider.tsx",
+    "components/DemoBanner.tsx",
+    "pages/NotFoundPage.tsx",
+    "pages/SomethingWentWrongPage.tsx",
+    "internal-components/Head.tsx",
+    "internal-components/ThemeProvider.tsx",
+    "prod-components/OuterErrorBoundary.tsx"
+  ],
+  "wholeDirs": [
+    "constants",
+    "polyfills",
+    "extensions/shadcn/hooks"
+  ],
+  "wholeFiles": [
+    "fonts.json"
+  ],
+  "rootFiles": [
+    "postcss.config.js",
+    "components.json",
+    "tsconfig.node.json"
+  ],
+  "publicDir": "public",
+  "hubOwned": [
+    "user-routes.tsx",
+    "app/auth/UserGuard.tsx",
+    "hub/",
+    "components/Header.tsx",
+    "components/Footer.tsx",
+    "constants/default-theme.ts",
+    "index.css"
+  ],
+  "_hubOwned": "Paths under src/ that belong to the Hub and are never overwritten or followed by the script (files, or folders ending in /).",
+  "_rootOwned": "Owned by the Hub, never copied: index.html, head.html, vite.config.ts, tailwind.config.js, tsconfig.json, package.json (the Hub's theme and build)."
+}
