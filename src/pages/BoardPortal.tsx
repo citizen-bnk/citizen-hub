@@ -258,7 +258,7 @@ function BoardPortalContent() {
 
   if (loading || rolesLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <Header />
         
         <div className="page-container container mx-auto px-4 py-6 sm:py-8">
@@ -266,8 +266,8 @@ function BoardPortalContent() {
           <div className="mb-6 sm:mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 lg:pt-24">
               <div>
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">Board Portal</h1>
-                <p className="text-sm sm:text-base text-gray-600 mt-1">Manage board activities and governance</p>
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">Board Portal</h1>
+                <p className="text-sm sm:text-base text-muted-foreground mt-1">Manage board activities and governance</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button 
@@ -300,7 +300,7 @@ function BoardPortalContent() {
   const isMeetingToday = nextMeeting && new Date(nextMeeting.meeting_date).toDateString() === new Date().toDateString();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Header />
       
       {/* Document Upload Modal */}
@@ -315,8 +315,8 @@ function BoardPortalContent() {
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 lg:pt-24">
             <div>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">Board Portal</h1>
-              <p className="text-sm sm:text-base text-gray-600 mt-1">Manage board activities and governance</p>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">Board Portal</h1>
+              <p className="text-sm sm:text-base text-muted-foreground mt-1">Manage board activities and governance</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button 
@@ -363,8 +363,8 @@ function BoardPortalContent() {
                   <div className="bg-gradient-to-br from-[#6d52a2]/10 to-[#4a3470]/10 border border-[#6d52a2]/20 rounded-lg p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Overall Compliance Status</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Your document submission progress</p>
+                        <h3 className="text-lg font-semibold text-foreground dark:text-gray-100">Overall Compliance Status</h3>
+                        <p className="text-sm text-muted-foreground dark:text-gray-400 mt-1">Your document submission progress</p>
                       </div>
                       <Badge 
                         variant={documentSummary.completion_percentage === 100 ? "default" : documentSummary.completion_percentage >= 75 ? "secondary" : "destructive"}
@@ -377,7 +377,7 @@ function BoardPortalContent() {
                     {/* Progress Bar */}
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-700 dark:text-gray-300">Progress</span>
+                        <span className="text-muted-foreground dark:text-gray-300">Progress</span>
                         <span className="font-medium">{documentSummary.approved} of {documentSummary.total_required} approved</span>
                       </div>
                       <Progress value={documentSummary.completion_percentage} className="h-3" />
@@ -420,7 +420,7 @@ function BoardPortalContent() {
                           </p>
                           <ul className="space-y-2">
                             {documentSummary.critical_missing.map((docName, idx) => (
-                              <li key={idx} className="text-sm text-red-900 dark:text-red-100 flex items-center gap-2 bg-white dark:bg-gray-900 p-2 rounded">
+                              <li key={idx} className="text-sm text-red-900 dark:text-red-100 flex items-center gap-2 bg-card dark:bg-gray-900 p-2 rounded">
                                 <XCircle className="h-4 w-4 text-red-600 flex-shrink-0" />
                                 <span className="font-medium">{docName}</span>
                               </li>
@@ -443,7 +443,7 @@ function BoardPortalContent() {
                           </p>
                           <div className="space-y-2">
                             {documentSummary.expiring_soon.map((doc, idx) => (
-                              <div key={idx} className="flex items-center justify-between p-3 bg-white dark:bg-gray-900 rounded border border-amber-200 dark:border-amber-800">
+                              <div key={idx} className="flex items-center justify-between p-3 bg-card dark:bg-gray-900 rounded border border-amber-200 dark:border-amber-800">
                                 <span className="text-sm font-medium text-amber-900 dark:text-amber-100">{doc.document_name}</span>
                                 <Badge 
                                   variant={doc.severity === 'critical' ? 'destructive' : 'secondary'}
@@ -506,7 +506,7 @@ function BoardPortalContent() {
               ) : (
                 <div className="text-center py-12">
                   <Loader2 className="h-8 w-8 animate-spin text-[#6d52a2] mx-auto mb-4" />
-                  <p className="text-gray-600 dark:text-gray-400">Loading compliance status...</p>
+                  <p className="text-muted-foreground dark:text-gray-400">Loading compliance status...</p>
                 </div>
               )}
             </div>
@@ -533,10 +533,10 @@ function BoardPortalContent() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col md:flex-row justify-between gap-6 items-start md:items-center bg-white dark:bg-gray-800 p-4 rounded-lg border">
+              <div className="flex flex-col md:flex-row justify-between gap-6 items-start md:items-center bg-card dark:bg-gray-800 p-4 rounded-lg border">
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">{nextMeeting.title}</h3>
-                  <div className="flex flex-wrap gap-y-2 gap-x-6 mt-3 text-sm text-gray-600 dark:text-gray-300">
+                  <h3 className="text-lg font-bold text-foreground dark:text-gray-100">{nextMeeting.title}</h3>
+                  <div className="flex flex-wrap gap-y-2 gap-x-6 mt-3 text-sm text-muted-foreground dark:text-gray-300">
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-gray-400" />
                       <span className="font-medium">
@@ -601,7 +601,7 @@ function BoardPortalContent() {
               <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <User className="h-4 w-4 text-blue-600" />
-                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Position</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground dark:text-gray-400">Position</p>
                 </div>
                 <p className="font-semibold text-base sm:text-lg capitalize">{profile?.position?.replace('_', ' ') || 'Not Set'}</p>
                 <div className="mt-2">{getStatusBadge(profile?.status || null)}</div>
@@ -610,21 +610,21 @@ function BoardPortalContent() {
               <div className="p-4 bg-green-50 dark:bg-green-950 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <TrendingUp className="h-4 w-4 text-green-600" />
-                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Total Shares</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground dark:text-gray-400">Total Shares</p>
                 </div>
                 <p className="font-semibold text-base sm:text-lg">{profile?.total_shares?.toLocaleString() || 0}</p>
-                <p className="text-xs text-gray-500 mt-1">{formatCurrency((profile?.total_shares || 0) * 10, 'LSL')}</p>
+                <p className="text-xs text-muted-foreground mt-1">{formatCurrency((profile?.total_shares || 0) * 10, 'LSL')}</p>
               </div>
               
               <div className="p-4 bg-purple-50 dark:bg-purple-950 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <Calendar className="h-4 w-4 text-purple-600" />
-                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Term Status</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground dark:text-gray-400">Term Status</p>
                 </div>
                 <p className="font-semibold text-base sm:text-lg">
                   {daysUntilTermEnd !== null ? `${daysUntilTermEnd} days` : 'N/A'}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   {profile?.term_end_date ? `Until ${new Date(profile.term_end_date).toLocaleDateString()}` : 'No end date'}
                 </p>
               </div>
@@ -632,7 +632,7 @@ function BoardPortalContent() {
               <div className="p-4 bg-amber-50 dark:bg-amber-950 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <Calendar className="h-4 w-4 text-amber-600" />
-                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Appointed</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground dark:text-gray-400">Appointed</p>
                 </div>
                 <p className="font-semibold text-xs sm:text-sm">
                   {profile?.appointed_date ? new Date(profile.appointed_date).toLocaleDateString('en-ZA', { 
@@ -676,15 +676,15 @@ function BoardPortalContent() {
                   Investment Requirement
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                    <p className="text-xs text-gray-600 dark:text-gray-400">Required Investment</p>
+                  <div className="p-3 bg-background dark:bg-gray-800 rounded-lg">
+                    <p className="text-xs text-muted-foreground dark:text-gray-400">Required Investment</p>
                     <p className="font-semibold text-base mt-1">
                       {profile.investment_status.required_shares.toLocaleString()} shares
                     </p>
-                    <p className="text-xs text-gray-500">{formatCurrency(profile.investment_status.required_shares * 10, 'LSL')}</p>
+                    <p className="text-xs text-muted-foreground">{formatCurrency(profile.investment_status.required_shares * 10, 'LSL')}</p>
                   </div>
-                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                    <p className="text-xs text-gray-600 dark:text-gray-400">Compliance Status</p>
+                  <div className="p-3 bg-background dark:bg-gray-800 rounded-lg">
+                    <p className="text-xs text-muted-foreground dark:text-gray-400">Compliance Status</p>
                     <div className="mt-1">
                       {profile.investment_status.meets_requirement ? (
                         <Badge variant="default" className="bg-green-500">
@@ -697,7 +697,7 @@ function BoardPortalContent() {
                             <XCircle className="h-3 w-3 mr-1" />
                             Short {profile.investment_status.shares_needed} shares
                           </Badge>
-                          <p className="text-xs text-gray-600">
+                          <p className="text-xs text-muted-foreground">
                             Additional investment needed: {formatCurrency(profile.investment_status.investment_needed, 'LSL')}
                           </p>
                           <Button 

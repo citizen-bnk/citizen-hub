@@ -699,7 +699,7 @@ export default function MySubscriptions() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Header />
       
       <div className="page-container container mx-auto px-4 py-6 sm:py-8">
@@ -707,8 +707,8 @@ export default function MySubscriptions() {
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">My Investments</h1>
-              <p className="text-sm sm:text-base text-gray-600 mt-1">Track your share subscriptions and certificates</p>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">My Investments</h1>
+              <p className="text-sm sm:text-base text-muted-foreground mt-1">Track your share subscriptions and certificates</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button 
@@ -732,7 +732,7 @@ export default function MySubscriptions() {
 
         {loading ? (
           <div className="text-center py-12">
-            <p className="text-gray-500">Loading your investments...</p>
+            <p className="text-muted-foreground">Loading your investments...</p>
           </div>
         ) : subscriptions.length === 0 ? (
           <div className="space-y-6">
@@ -1648,7 +1648,7 @@ export default function MySubscriptions() {
                 className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
                   selectedPaymentMethod === 'eft'
                     ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/20'
-                    : 'border-gray-200 hover:border-blue-300'
+                    : 'border-border hover:border-blue-300'
                 }`}
                 onClick={() => setSelectedPaymentMethod('eft')}
               >
@@ -1657,10 +1657,10 @@ export default function MySubscriptions() {
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                       selectedPaymentMethod === 'eft'
                         ? 'border-blue-600 bg-blue-600'
-                        : 'border-gray-300'
+                        : 'border-border'
                     }`}>
                       {selectedPaymentMethod === 'eft' && (
-                        <div className="w-2 h-2 rounded-full bg-white" />
+                        <div className="w-2 h-2 rounded-full bg-card" />
                       )}
                     </div>
                   </div>
@@ -1675,7 +1675,7 @@ export default function MySubscriptions() {
                     
                     {/* Banking Details */}
                     {selectedPaymentMethod === 'eft' && (
-                      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 mt-3">
+                      <div className="bg-card dark:bg-gray-900 border border-border dark:border-gray-700 rounded-lg p-4 mt-3">
                         <h4 className="font-semibold mb-3 flex items-center gap-2">
                           <Shield className="h-4 w-4 text-green-600" />
                           Citizen Bank Account Details
@@ -1738,7 +1738,7 @@ export default function MySubscriptions() {
                 className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
                   selectedPaymentMethod === 'card'
                     ? 'border-purple-600 bg-purple-50 dark:bg-purple-950/20'
-                    : 'border-gray-200 hover:border-purple-300'
+                    : 'border-border hover:border-purple-300'
                 }`}
                 onClick={() => setSelectedPaymentMethod('card')}
               >
@@ -1747,10 +1747,10 @@ export default function MySubscriptions() {
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                       selectedPaymentMethod === 'card'
                         ? 'border-purple-600 bg-purple-600'
-                        : 'border-gray-300'
+                        : 'border-border'
                     }`}>
                       {selectedPaymentMethod === 'card' && (
-                        <div className="w-2 h-2 rounded-full bg-white" />
+                        <div className="w-2 h-2 rounded-full bg-card" />
                       )}
                     </div>
                   </div>
@@ -1772,7 +1772,7 @@ export default function MySubscriptions() {
                 className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
                   selectedPaymentMethod === 'crypto'
                     ? 'border-orange-600 bg-orange-50 dark:bg-orange-950/20'
-                    : 'border-gray-200 hover:border-orange-300'
+                    : 'border-border hover:border-orange-300'
                 }`}
                 onClick={() => setSelectedPaymentMethod('crypto')}
               >
@@ -1781,10 +1781,10 @@ export default function MySubscriptions() {
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                       selectedPaymentMethod === 'crypto'
                         ? 'border-orange-600 bg-orange-600'
-                        : 'border-gray-300'
+                        : 'border-border'
                     }`}>
                       {selectedPaymentMethod === 'crypto' && (
-                        <div className="w-2 h-2 rounded-full bg-white" />
+                        <div className="w-2 h-2 rounded-full bg-card" />
                       )}
                     </div>
                   </div>
@@ -1804,7 +1804,7 @@ export default function MySubscriptions() {
                     
                     {/* Crypto Wallet Details */}
                     {selectedPaymentMethod === 'crypto' && (
-                      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 mt-3">
+                      <div className="bg-card dark:bg-gray-900 border border-border dark:border-gray-700 rounded-lg p-4 mt-3">
                         <h4 className="font-semibold mb-3 flex items-center gap-2">
                           <QrCode className="h-4 w-4 text-orange-600" />
                           Available Cryptocurrency Options
@@ -1814,7 +1814,7 @@ export default function MySubscriptions() {
                         ) : availableCryptos.length > 0 ? (
                           <div className="space-y-3">
                             {availableCryptos.map((crypto) => (
-                              <div key={crypto.crypto_type} className="border rounded-lg p-3 bg-gray-50 dark:bg-gray-800">
+                              <div key={crypto.crypto_type} className="border rounded-lg p-3 bg-background dark:bg-gray-800">
                                 <div className="flex items-center justify-between mb-2">
                                   <span className="font-semibold text-sm">{crypto.crypto_type}</span>
                                   {crypto.network_info && (
@@ -1822,7 +1822,7 @@ export default function MySubscriptions() {
                                   )}
                                 </div>
                                 <div className="text-xs text-muted-foreground mb-1">Wallet Address:</div>
-                                <div className="font-mono text-xs bg-white dark:bg-gray-900 p-2 rounded border break-all">
+                                <div className="font-mono text-xs bg-card dark:bg-gray-900 p-2 rounded border break-all">
                                   {crypto.wallet_address || 'Not configured'}
                                 </div>
                               </div>

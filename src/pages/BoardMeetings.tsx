@@ -52,7 +52,7 @@ const BoardMeetings = () => {
       scheduled: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
       in_progress: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
       completed: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-      cancelled: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
+      cancelled: 'bg-accent text-foreground dark:bg-gray-900 dark:text-gray-300',
       postponed: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
     };
     return colors[status] || colors.scheduled;
@@ -72,12 +72,12 @@ const BoardMeetings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-background dark:bg-gray-900">
       <Header />
       <div className="container mx-auto px-4 py-8 pt-[calc(88px+2rem)] sm:pt-[calc(96px+2rem)] lg:pt-[calc(104px+2rem)]">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Board Meetings</h1>
-          <p className="text-gray-600 dark:text-gray-400">View and manage all board meetings</p>
+          <h1 className="text-3xl font-bold text-foreground dark:text-white mb-2">Board Meetings</h1>
+          <p className="text-muted-foreground dark:text-gray-400">View and manage all board meetings</p>
         </div>
 
         {/* Tabs for filtering */}

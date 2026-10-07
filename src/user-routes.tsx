@@ -3,6 +3,7 @@ import { type RouteObject } from "react-router-dom";
 import { LoginRedirect, StackHandlerRoutes, UserGuard } from "app/auth";
 import ExternalRedirect from "./hub/ExternalRedirect";
 import HubDemoSignIn from "./hub/HubDemoSignIn";
+import { businessRoutes } from "./business-routes";
 
 // The screens that live in the Hub. Same addresses as on the website, so bookmarks and emailed links keep working.
 const MySubscriptions = lazy(() => import("./pages/MySubscriptions.tsx"));
@@ -16,6 +17,7 @@ const guarded = (el: JSX.Element) => <UserGuard>{el}</UserGuard>;
 
 export const userRoutes: RouteObject[] = [
   { path: "/", element: guarded(<HubHome />) },
+  ...businessRoutes,
   { path: "/my-subscriptions", element: guarded(<MySubscriptions />) },
   { path: "/mysubscriptions", element: guarded(<MySubscriptions />) },
   { path: "/board-portal", element: guarded(<BoardPortal />) },
@@ -28,6 +30,7 @@ export const userRoutes: RouteObject[] = [
   { path: "/meetingdetails", element: guarded(<MeetingDetails />) },
   // Sign-in on the Hub itself, used only when the website's session is not shared with it (see UserGuard).
   { path: "/demo", element: <HubDemoSignIn /> },
+  { path: "/login", element: <HubDemoSignIn /> },
   { path: "/auth/redirect", element: <LoginRedirect /> },
   { path: "/auth/*", element: <StackHandlerRoutes /> },
   // everything else is the website's

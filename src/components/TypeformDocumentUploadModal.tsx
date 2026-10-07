@@ -223,7 +223,7 @@ export function TypeformDocumentUploadModal({ open, onClose, onComplete }: Typef
                 )}
 
                 {/* File Upload Area */}
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary transition-colors">
+                <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary transition-colors">
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -260,7 +260,7 @@ export function TypeformDocumentUploadModal({ open, onClose, onComplete }: Typef
           </div>
 
           {/* Navigation Footer */}
-          <div className="p-6 border-t bg-gray-50 flex items-center justify-between">
+          <div className="p-6 border-t bg-background flex items-center justify-between">
             <Button
               variant="outline"
               onClick={previousStep}

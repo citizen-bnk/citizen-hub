@@ -7,9 +7,9 @@ const ALL: (Workspace & { roles: string[] })[] = [
     description: "Subscriptions, proof of payment, receipts and certificates" },
   { roles: ["board_member"], kind: "board", label: "Board portal", path: "/board-portal",
     description: "Board papers, meetings and votes" },
-  { roles: ["staff", "back_office", "super_admin"], kind: "staff", label: "Back office", path: "/back-office-dashboard", external: true,
+  { roles: ["staff", "back_office", "super_admin"], kind: "staff", label: "Back office", path: "/back-office-dashboard",
     description: "Payments, documents, invitations, the data room and licensing" },
-  { roles: ["admin", "super_admin"], kind: "staff", label: "Administration", path: "/admin-dashboard", external: true,
+  { roles: ["admin", "super_admin"], kind: "staff", label: "Administration", path: "/admin-dashboard",
     description: "Users, roles, suspension and the audit trail" },
 ];
 

@@ -1,7 +1,7 @@
 import react from "@vitejs/plugin-react";
 import "dotenv/config";
 import path from "node:path";
-import { defineConfig, splitVendorChunkPlugin } from "vite";
+import { defineConfig, loadEnv, splitVendorChunkPlugin } from "vite";
 import injectHTML from "vite-plugin-html-inject";
 import tsConfigPaths from "vite-tsconfig-paths";
 
@@ -10,12 +10,18 @@ import tsConfigPaths from "vite-tsconfig-paths";
 type Extension = { name: string; version: string; config: Record<string, unknown> };
 
 const stackConfig = (): Record<string, unknown> => {
+  const env = { ...loadEnv("production", process.cwd(), ""), ...process.env };
   try {
-    const list = JSON.parse(process.env.AUTH_PROVIDERS || "[]") as Extension[];
-    return list.find((e) => e.name === "stack-auth")?.config ?? {};
+    const list = JSON.parse(env.AUTH_PROVIDERS || "[]") as Extension[];
+    const configured = list.find((e) => e.name === "stack-auth")?.config ?? {};
+    const projectId = configured.projectId || env.VITE_STACK_PROJECT_ID;
+    const publishableClientKey = configured.publishableClientKey || env.VITE_STACK_PUBLISHABLE_CLIENT_KEY;
+    if (process.env.HUB_E2E_STUB !== "1" && (!projectId || !publishableClientKey)) {
+      throw new Error("Configure AUTH_PROVIDERS or VITE_STACK_PROJECT_ID and VITE_STACK_PUBLISHABLE_CLIENT_KEY before building the Hub");
+    }
+    return { projectId, publishableClientKey, handlerUrl: configured.handlerUrl || "auth", jwksUrl: configured.jwksUrl || "" };
   } catch (err) {
-    console.error("Error parsing AUTH_PROVIDERS", err);
-    return {};
+    throw new Error("Citizen Hub authentication configuration is missing or invalid", { cause: err });
   }
 };
 

@@ -188,7 +188,7 @@ export const PersistentNotificationBanner = () => {
               onClick={handleAction}
               variant="secondary"
               size="sm"
-              className="bg-white text-gray-900 hover:bg-gray-100 font-medium"
+              className="bg-card text-foreground hover:bg-accent font-medium"
               aria-label={currentNotification.cta}
             >
               {currentNotification.cta}
@@ -197,7 +197,7 @@ export const PersistentNotificationBanner = () => {
               onClick={handleDismiss}
               variant="ghost"
               size="icon"
-              className="h-8 w-8 hover:bg-white/20 text-white"
+              className="h-8 w-8 hover:bg-card/20 text-white"
               aria-label="Dismiss notification"
             >
               <X className="h-4 w-4" />

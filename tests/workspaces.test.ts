@@ -17,7 +17,7 @@ test("a customer, an unknown role or no role gets no Hub workspace", () => {
   for (const roles of [["customer"], ["root"], [], ["ADMIN"]]) assert.deepEqual(labels(roles), []);
 });
 
-test("investor and board workspaces live in the Hub; staff ones still open on the website", () => {
+test("investor and board workspaces live in the Hub; staff workspaces are internal too", () => {
   const all = workspacesFor(["investor", "board_member", "super_admin"]);
-  for (const w of all) assert.equal(!!w.external, w.kind === "staff", w.label);
+  for (const w of all) assert.equal(!!w.external, false, w.label);
 });

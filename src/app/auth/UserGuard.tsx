@@ -33,8 +33,8 @@ export const UserGuard = (props: { children: React.ReactNode }) => {
       window.location.replace(`/demo?after_auth_return_to=${back}`);
       return;
     }
-    const back = encodeURIComponent(withParam(here, BOUNCE_PARAM));
-    window.location.replace(websiteUrl(`/auth/sign-in?after_auth_return_to=${back}`));
+    const back = encodeURIComponent(here);
+    window.location.replace(`/auth/sign-in?after_auth_return_to=${back}`);
   }, [user]);
   if (!user) {
     return (

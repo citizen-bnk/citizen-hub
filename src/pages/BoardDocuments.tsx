@@ -201,7 +201,7 @@ const BoardDocuments = () => {
 
   const getStatusBadge = (item: BoardMemberDocumentStatus) => {
     if (!item.submission) {
-      return <Badge variant="secondary" className="bg-gray-200 text-gray-700">Not Submitted</Badge>;
+      return <Badge variant="secondary" className="bg-gray-200 text-muted-foreground">Not Submitted</Badge>;
     }
 
     switch (item.submission.status) {
@@ -269,7 +269,7 @@ const BoardDocuments = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-screen bg-gray-50">
+      <div className="flex flex-col min-h-screen bg-background">
         <Header />
         <main className="flex-grow container mx-auto px-4 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
@@ -284,7 +284,7 @@ const BoardDocuments = () => {
 
   if (error) {
     return (
-      <div className="flex flex-col min-h-screen bg-gray-50">
+      <div className="flex flex-col min-h-screen bg-background">
         <Header />
         <main className="flex-grow flex items-center justify-center p-6">
           <Card className="max-w-lg w-full shadow-lg">
@@ -293,10 +293,10 @@ const BoardDocuments = () => {
                 <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-6">
                   <FileText className="h-8 w-8 text-red-600" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-3">
+                <h2 className="text-2xl font-bold text-foreground mb-3">
                   Error Loading Documents
                 </h2>
-                <p className="text-gray-600 mb-6">
+                <p className="text-muted-foreground mb-6">
                   {error}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -322,17 +322,17 @@ const BoardDocuments = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen bg-background">
       <Header />
       <main className="relative flex-grow container mx-auto px-4 max-w-7xl pt-24 md:pt-28 pb-24">
         {/* Page Header */}
         <section id="page-header" aria-labelledby="board-documents-title" className="mb-8 scroll-mt-28">
           <div className="flex items-start justify-between">
             <div>
-              <h1 id="board-documents-title" className="text-3xl md:text-4xl font-bold mb-2 text-gray-900">
+              <h1 id="board-documents-title" className="text-3xl md:text-4xl font-bold mb-2 text-foreground">
                 Board Member Document Portal
               </h1>
-              <p className="text-gray-600 text-lg">
+              <p className="text-muted-foreground text-lg">
                 Submit and manage your regulatory compliance documents
               </p>
             </div>
@@ -344,51 +344,51 @@ const BoardDocuments = () => {
           <section id="progress-summary" aria-labelledby="progress-summary-title" className="scroll-mt-28">
             <Card className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50">
               <CardHeader>
-                <CardTitle id="progress-summary-title" className="text-xl text-gray-900">Your Document Completion Status</CardTitle>
+                <CardTitle id="progress-summary-title" className="text-xl text-foreground">Your Document Completion Status</CardTitle>
                 <CardDescription>Track your progress in submitting and getting approved all required board member documents</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div>
-                    <div className="flex justify-between text-gray-900 mb-2">
+                    <div className="flex justify-between text-foreground mb-2">
                       <span className="font-medium">Approval Progress</span>
                       <span className="font-bold text-lg">{status.summary.completion_percentage}%</span>
                     </div>
                     <Progress value={status.summary.completion_percentage} className="h-3" />
-                    <p className="text-sm text-gray-600 mt-2">
+                    <p className="text-sm text-muted-foreground mt-2">
                       {status.summary.approved} of {status.summary.total_required} documents approved
                     </p>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 text-center">
-                    <div className="bg-white rounded-lg p-4 shadow-sm border-2 border-blue-200">
+                    <div className="bg-card rounded-lg p-4 shadow-sm border-2 border-blue-200">
                       <div className="text-3xl font-bold text-blue-600">{status.summary.total_required}</div>
-                      <div className="text-xs text-gray-600 mt-1 font-medium">Total Required</div>
-                      <div className="text-xs text-gray-500 mt-1">Documents needed</div>
+                      <div className="text-xs text-muted-foreground mt-1 font-medium">Total Required</div>
+                      <div className="text-xs text-muted-foreground mt-1">Documents needed</div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 shadow-sm border-2 border-indigo-200">
+                    <div className="bg-card rounded-lg p-4 shadow-sm border-2 border-indigo-200">
                       <div className="text-3xl font-bold text-indigo-600">{status.summary.submitted || 0}</div>
-                      <div className="text-xs text-gray-600 mt-1 font-medium">Submitted</div>
-                      <div className="text-xs text-gray-500 mt-1">Documents uploaded</div>
+                      <div className="text-xs text-muted-foreground mt-1 font-medium">Submitted</div>
+                      <div className="text-xs text-muted-foreground mt-1">Documents uploaded</div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 shadow-sm border-2 border-gray-200">
-                      <div className="text-3xl font-bold text-gray-600">{status.summary.total_remaining || 0}</div>
-                      <div className="text-xs text-gray-600 mt-1 font-medium">Remaining</div>
-                      <div className="text-xs text-gray-500 mt-1">Not yet uploaded</div>
+                    <div className="bg-card rounded-lg p-4 shadow-sm border-2 border-border">
+                      <div className="text-3xl font-bold text-muted-foreground">{status.summary.total_remaining || 0}</div>
+                      <div className="text-xs text-muted-foreground mt-1 font-medium">Remaining</div>
+                      <div className="text-xs text-muted-foreground mt-1">Not yet uploaded</div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 shadow-sm border-2 border-green-200">
+                    <div className="bg-card rounded-lg p-4 shadow-sm border-2 border-green-200">
                       <div className="text-3xl font-bold text-green-600">{status.summary.approved}</div>
-                      <div className="text-xs text-gray-600 mt-1 font-medium">Approved</div>
-                      <div className="text-xs text-gray-500 mt-1">Verified & accepted</div>
+                      <div className="text-xs text-muted-foreground mt-1 font-medium">Approved</div>
+                      <div className="text-xs text-muted-foreground mt-1">Verified & accepted</div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 shadow-sm border-2 border-yellow-200">
+                    <div className="bg-card rounded-lg p-4 shadow-sm border-2 border-yellow-200">
                       <div className="text-3xl font-bold text-yellow-600">{status.summary.pending_review}</div>
-                      <div className="text-xs text-gray-600 mt-1 font-medium">Under Review</div>
-                      <div className="text-xs text-gray-500 mt-1">Being processed</div>
+                      <div className="text-xs text-muted-foreground mt-1 font-medium">Under Review</div>
+                      <div className="text-xs text-muted-foreground mt-1">Being processed</div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 shadow-sm border-2 border-red-200">
+                    <div className="bg-card rounded-lg p-4 shadow-sm border-2 border-red-200">
                       <div className="text-3xl font-bold text-red-600">{status.summary.rejected}</div>
-                      <div className="text-xs text-gray-600 mt-1 font-medium">Needs Action</div>
-                      <div className="text-xs text-gray-500 mt-1">Requires resubmit</div>
+                      <div className="text-xs text-muted-foreground mt-1 font-medium">Needs Action</div>
+                      <div className="text-xs text-muted-foreground mt-1">Requires resubmit</div>
                     </div>
                   </div>
                   
@@ -451,15 +451,15 @@ const BoardDocuments = () => {
                           getSeverityPriority(a.requirement.severity) - getSeverityPriority(b.requirement.severity)
                         )
                         .map((item) => (
-                          <div key={item.requirement.id} className="bg-white p-4 rounded-lg border-2 border-red-200 shadow-sm">
+                          <div key={item.requirement.id} className="bg-card p-4 rounded-lg border-2 border-red-200 shadow-sm">
                             <div className="flex justify-between items-start gap-4">
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                  <h3 className="text-gray-900 font-semibold text-lg">{item.requirement.name}</h3>
+                                  <h3 className="text-foreground font-semibold text-lg">{item.requirement.name}</h3>
                                   {getSeverityBadge(item.requirement.severity)}
                                   {item.is_required && <span className="text-red-600 text-sm font-medium">* Required</span>}
                                 </div>
-                                <p className="text-gray-700 text-sm mb-3">{item.requirement.description || 'This document is required for regulatory compliance and board member verification.'}</p>
+                                <p className="text-muted-foreground text-sm mb-3">{item.requirement.description || 'This document is required for regulatory compliance and board member verification.'}</p>
                                 {item.requirement.requires_certification && (
                                   <Alert className="mb-3 bg-amber-50 border-amber-500">
                                     <AlertTriangle className="h-4 w-4 text-amber-700" />
@@ -469,7 +469,7 @@ const BoardDocuments = () => {
                                   </Alert>
                                 )}
                                 {item.requirement.validity_period_days && (
-                                  <p className="text-gray-600 text-xs mb-2">
+                                  <p className="text-muted-foreground text-xs mb-2">
                                     <Clock className="h-3 w-3 inline mr-1" />
                                     Valid for {item.requirement.validity_period_days} days after approval
                                   </p>
@@ -562,7 +562,7 @@ const BoardDocuments = () => {
             <section id="document-checklist" aria-labelledby="document-checklist-title" className="scroll-mt-28">
               <Card>
                 <CardHeader>
-                  <CardTitle id="document-checklist-title" className="text-2xl text-gray-900">
+                  <CardTitle id="document-checklist-title" className="text-2xl text-foreground">
                     Complete Document Checklist ({checklist.jurisdiction})
                   </CardTitle>
                   <CardDescription>
@@ -574,13 +574,13 @@ const BoardDocuments = () => {
                   <div className="hidden lg:block overflow-x-auto">
                     <Table>
                       <TableHeader>
-                        <TableRow className="bg-gray-100">
-                          <TableHead className="text-gray-900 font-semibold">Document Name</TableHead>
-                          <TableHead className="text-gray-900 font-semibold">Description</TableHead>
-                          <TableHead className="text-gray-900 font-semibold">Priority</TableHead>
-                          <TableHead className="text-gray-900 font-semibold">Status</TableHead>
-                          <TableHead className="text-gray-900 font-semibold">Expiry</TableHead>
-                          <TableHead className="text-right text-gray-900 font-semibold">Action</TableHead>
+                        <TableRow className="bg-accent">
+                          <TableHead className="text-foreground font-semibold">Document Name</TableHead>
+                          <TableHead className="text-foreground font-semibold">Description</TableHead>
+                          <TableHead className="text-foreground font-semibold">Priority</TableHead>
+                          <TableHead className="text-foreground font-semibold">Status</TableHead>
+                          <TableHead className="text-foreground font-semibold">Expiry</TableHead>
+                          <TableHead className="text-right text-foreground font-semibold">Action</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -589,13 +589,13 @@ const BoardDocuments = () => {
                           .map((item) => (
                             <TableRow 
                               key={item.requirement.id} 
-                              className={needsAction(item) ? "bg-yellow-50 hover:bg-yellow-100" : "hover:bg-gray-50"}
+                              className={needsAction(item) ? "bg-yellow-50 hover:bg-yellow-100" : "hover:bg-background"}
                             >
-                              <TableCell className="text-gray-900 font-medium">
+                              <TableCell className="text-foreground font-medium">
                                 {item.requirement.name}
                                 {item.is_required && <span className="text-red-600 ml-1">*</span>}
                               </TableCell>
-                              <TableCell className="text-gray-700 text-sm max-w-md">
+                              <TableCell className="text-muted-foreground text-sm max-w-md">
                                 <div>
                                   <p>{item.requirement.description || 'Required for regulatory compliance and board member verification.'}</p>
                                   {item.requirement.requires_certification && (
@@ -607,7 +607,7 @@ const BoardDocuments = () => {
                                     </Alert>
                                   )}
                                   {item.requirement.validity_period_days && (
-                                    <p className="text-xs text-gray-500 mt-1">
+                                    <p className="text-xs text-muted-foreground mt-1">
                                       <Clock className="h-3 w-3 inline mr-1" />
                                       Valid for {item.requirement.validity_period_days} days
                                     </p>
@@ -627,7 +627,7 @@ const BoardDocuments = () => {
                                   )}
                                 </div>
                               </TableCell>
-                              <TableCell className="text-gray-700 text-sm">
+                              <TableCell className="text-muted-foreground text-sm">
                                 {getExpiryWarning(item)}
                               </TableCell>
                               <TableCell className="text-right">
@@ -694,11 +694,11 @@ const BoardDocuments = () => {
                                   )}
                                 </div>
                                 {item.submission?.file_name && (
-                                  <div className="mt-3 p-3 bg-gray-50 rounded border border-gray-200">
-                                    <p className="text-xs text-gray-600 mb-1">Uploaded File:</p>
-                                    <p className="text-sm text-gray-900 font-medium">{item.submission.file_name}</p>
+                                  <div className="mt-3 p-3 bg-background rounded border border-border">
+                                    <p className="text-xs text-muted-foreground mb-1">Uploaded File:</p>
+                                    <p className="text-sm text-foreground font-medium">{item.submission.file_name}</p>
                                     {item.submission.submitted_at && (
-                                      <p className="text-xs text-gray-500 mt-1">
+                                      <p className="text-xs text-muted-foreground mt-1">
                                         Submitted: {new Date(item.submission.submitted_at).toLocaleDateString()}
                                       </p>
                                     )}
@@ -724,7 +724,7 @@ const BoardDocuments = () => {
                             <div className="space-y-3">
                               {/* Document Name & Required Badge */}
                               <div className="flex items-start justify-between gap-2">
-                                <h3 className="text-base font-semibold text-gray-900">
+                                <h3 className="text-base font-semibold text-foreground">
                                   {item.requirement.name}
                                   {item.is_required && <span className="text-red-600 ml-1">*</span>}
                                 </h3>
@@ -732,7 +732,7 @@ const BoardDocuments = () => {
                               </div>
 
                               {/* Description */}
-                              <p className="text-sm text-gray-700">{item.requirement.description || 'Required for regulatory compliance and board member verification.'}</p>
+                              <p className="text-sm text-muted-foreground">{item.requirement.description || 'Required for regulatory compliance and board member verification.'}</p>
 
                               {/* Certification Warning */}
                               {item.requirement.requires_certification && (
@@ -746,7 +746,7 @@ const BoardDocuments = () => {
 
                               {/* Validity Period */}
                               {item.requirement.validity_period_days && (
-                                <p className="text-xs text-gray-600">
+                                <p className="text-xs text-muted-foreground">
                                   <Clock className="h-3 w-3 inline mr-1" />
                                   Valid for {item.requirement.validity_period_days} days after approval
                                 </p>
@@ -760,11 +760,11 @@ const BoardDocuments = () => {
 
                               {/* Uploaded File Info */}
                               {item.submission?.file_name && (
-                                <div className="p-3 bg-gray-50 rounded border border-gray-200">
-                                  <p className="text-xs text-gray-600 mb-1">Uploaded File:</p>
-                                  <p className="text-sm text-gray-900 font-medium">{item.submission.file_name}</p>
+                                <div className="p-3 bg-background rounded border border-border">
+                                  <p className="text-xs text-muted-foreground mb-1">Uploaded File:</p>
+                                  <p className="text-sm text-foreground font-medium">{item.submission.file_name}</p>
                                   {item.submission.submitted_at && (
-                                    <p className="text-xs text-gray-500 mt-1">
+                                    <p className="text-xs text-muted-foreground mt-1">
                                       Submitted: {new Date(item.submission.submitted_at).toLocaleDateString()}
                                     </p>
                                   )}

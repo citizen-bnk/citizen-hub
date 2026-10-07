@@ -244,7 +244,7 @@ export function DebitOrderDialog({ open, onOpenChange, subscriptionId, totalAmou
                         onChange={(e) => handleInputChange('monthly_amount', parseFloat(e.target.value) || 0)}
                         required
                       />
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         Total subscription: M {totalAmount.toFixed(2)}
                       </p>
                     </div>
@@ -259,7 +259,7 @@ export function DebitOrderDialog({ open, onOpenChange, subscriptionId, totalAmou
                         min={new Date().toISOString().split('T')[0]}
                         required
                       />
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         Recurring on this day each month
                       </p>
                     </div>
@@ -313,20 +313,20 @@ export function DebitOrderDialog({ open, onOpenChange, subscriptionId, totalAmou
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Bank:</span>
+                    <span className="text-muted-foreground">Bank:</span>
                     <span className="font-medium">{formData.bank_name}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Account Type:</span>
+                    <span className="text-muted-foreground">Account Type:</span>
                     <span className="font-medium capitalize">{formData.account_type}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Account Number:</span>
+                    <span className="text-muted-foreground">Account Number:</span>
                     <span className="font-medium">****{formData.account_number.slice(-4)}</span>
                   </div>
                   {formData.branch_code && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Branch Code:</span>
+                      <span className="text-muted-foreground">Branch Code:</span>
                       <span className="font-medium">{formData.branch_code}</span>
                     </div>
                   )}
@@ -339,11 +339,11 @@ export function DebitOrderDialog({ open, onOpenChange, subscriptionId, totalAmou
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Monthly Amount:</span>
+                    <span className="text-muted-foreground">Monthly Amount:</span>
                     <span className="font-bold text-lg">M {formData.monthly_amount.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">First Debit Date:</span>
+                    <span className="text-muted-foreground">First Debit Date:</span>
                     <span className="font-medium">
                       {new Date(formData.start_date).toLocaleDateString('en-LS', { 
                         year: 'numeric', 
@@ -353,7 +353,7 @@ export function DebitOrderDialog({ open, onOpenChange, subscriptionId, totalAmou
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Frequency:</span>
+                    <span className="text-muted-foreground">Frequency:</span>
                     <span className="font-medium">Monthly</span>
                   </div>
                 </CardContent>
@@ -393,7 +393,7 @@ export function DebitOrderDialog({ open, onOpenChange, subscriptionId, totalAmou
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
                   <CheckCircle2 className="h-8 w-8 text-green-600" />
                 </div>
-                <p className="text-gray-600">
+                <p className="text-muted-foreground">
                   Your debit order has been successfully set up!
                 </p>
               </div>

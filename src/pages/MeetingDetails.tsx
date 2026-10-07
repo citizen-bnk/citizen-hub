@@ -298,7 +298,7 @@ const MeetingDetails = () => {
       scheduled: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
       in_progress: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
       completed: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-      cancelled: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
+      cancelled: 'bg-accent text-foreground dark:bg-gray-900 dark:text-gray-300',
       postponed: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
       pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
     };
@@ -307,7 +307,7 @@ const MeetingDetails = () => {
 
   const getPriorityColor = (priority: string) => {
     const colors: Record<string, string> = {
-      low: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
+      low: 'bg-accent text-foreground dark:bg-gray-900 dark:text-gray-300',
       medium: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
       high: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
       urgent: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
@@ -338,7 +338,7 @@ const MeetingDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-background dark:bg-gray-900">
       <Header />
       <div className="container mx-auto px-4 py-8 pt-[calc(88px+2rem)] sm:pt-[calc(96px+2rem)] lg:pt-[calc(104px+2rem)]">
         <div className="mb-6 flex items-center gap-4">
@@ -614,7 +614,7 @@ const MeetingDetails = () => {
                           },
                           pending: { 
                             icon: Clock, 
-                            className: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
+                            className: 'bg-accent text-foreground dark:bg-gray-900 dark:text-gray-300',
                             label: 'Pending'
                           },
                         };

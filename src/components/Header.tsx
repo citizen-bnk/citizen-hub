@@ -44,14 +44,14 @@ export function Header() {
       style={{ background: "color-mix(in srgb, hsl(var(--background)) 80%, transparent)" }}
     >
       <div className="mx-auto flex h-[72px] max-w-7xl items-center gap-3 px-4">
-        <Link to="/" className="flex items-center gap-3" aria-label="Citizen Hub home">
-          <img src="/brand/logo-sm.webp" alt="" className="h-9 w-auto" />
-          <span className="font-display text-lg font-bold bg-clip-text text-transparent" style={{ backgroundImage: "var(--grad)" }}>
+        <Link to="/" className="flex shrink-0 items-center gap-2" aria-label="Citizen Hub home">
+          <img src="/brand/logo-sm.webp" alt="" className="hidden h-9 w-auto sm:block" />
+          <span className="font-display text-base sm:text-lg font-bold bg-clip-text text-transparent" style={{ backgroundImage: "var(--grad)" }}>
             Citizen Hub
           </span>
         </Link>
 
-        <nav className="ml-6 hidden items-center gap-1 md:flex" aria-label="Workspaces">
+        <nav className="ml-3 hidden min-w-0 items-center gap-1 overflow-x-auto xl:flex" aria-label="Workspaces">
           {links.map((l) =>
             l.external ? (
               <a key={l.path} href={websiteUrl(l.path)} className={linkClass({ isActive: false })}>{l.label}</a>
@@ -89,12 +89,12 @@ export function Header() {
               <span className="flex h-8 w-8 items-center justify-center rounded-full font-semibold text-white" style={{ backgroundImage: "var(--grad)" }}>
                 {name.slice(0, 1).toUpperCase()}
               </span>
-              <span className="hidden max-w-[10rem] truncate sm:block">{name}</span>
+              <span className="hidden max-w-[10rem] truncate 2xl:block">{name}</span>
             </button>
             {menu && (
               <div role="menu" className="absolute right-0 mt-2 w-60 rounded-lg border bg-popover p-1 shadow-lg">
-                <div className="px-3 py-2 text-xs text-muted-foreground">{user?.primaryEmail}</div>
-                <a role="menuitem" href={websiteUrl("/profile")} className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent">Profile and settings</a>
+                <div className="break-words px-3 py-2 text-xs text-muted-foreground">{user?.primaryEmail}</div>
+                <a role="menuitem" href="/profile" className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent">Profile and settings</a>
                 <button role="menuitem" type="button" onClick={signOut} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent">
                   <LogOut className="h-4 w-4" /> Sign out
                 </button>
@@ -104,7 +104,7 @@ export function Header() {
 
           <button
             type="button"
-            className="rounded-lg p-2 text-muted-foreground hover:bg-accent md:hidden"
+            className="rounded-lg p-2 text-muted-foreground hover:bg-accent xl:hidden"
             onClick={() => setMobile((m) => !m)}
             aria-label={mobile ? "Close menu" : "Open menu"}
           >
@@ -114,7 +114,7 @@ export function Header() {
       </div>
 
       {mobile && (
-        <nav className="border-t px-4 py-2 md:hidden" aria-label="Workspaces">
+        <nav className="border-t px-4 py-2 xl:hidden" aria-label="Workspaces">
           {links.map((l) => (
             <a key={l.path} href={l.external ? websiteUrl(l.path) : l.path} className="block rounded-lg px-3 py-3 text-sm hover:bg-accent">{l.label}</a>
           ))}

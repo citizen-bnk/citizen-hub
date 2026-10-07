@@ -8,16 +8,17 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const website = path.resolve(process.argv[2] || "");
 if (!process.argv[2] || !fs.existsSync(path.join(website, "src", "pages"))) {
   console.error("Usage: node tools/carve-out.mjs <path to the website checkout>");
   process.exit(2);
 }
-const hub = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
+const hub = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const cfg = JSON.parse(fs.readFileSync(path.join(hub, "tools", "carve-out.config.json"), "utf8"));
 const SRC = path.join(website, "src");
-const isHubOwned = (rel) => cfg.hubOwned.some((p) => (p.endsWith("/") ? rel.startsWith(p) : rel === p));
+const isHubOwned = (rel) => cfg.hubOwned.some((p) => (p.endsWith("/") ? rel.replaceAll("\\", "/").startsWith(p) : rel.replaceAll("\\", "/") === p));
 
 const exts = ["", ".tsx", ".ts", ".jsx", ".js", "/index.tsx", "/index.ts"];
 // Same order Vite uses (first match wins): "@/" is src/, so "@/components/ui/x" is src/components/ui/x. The shadcn
@@ -91,7 +92,6 @@ const manifest = [];
 for (const f of files) { const rel = path.relative(SRC, f); const out = path.join(target, rel); fs.mkdirSync(path.dirname(out), { recursive: true }); fs.copyFileSync(f, out); manifest.push(rel); }
 fs.writeFileSync(manifestPath, JSON.stringify(manifest.sort(), null, 2) + "\n");
 for (const r of cfg.rootFiles) { const from = path.join(website, r); if (fs.existsSync(from)) fs.copyFileSync(from, path.join(hub, r)); }
-fs.rmSync(path.join(hub, "public"), { recursive: true, force: true });
 fs.cpSync(path.join(website, cfg.publicDir), path.join(hub, "public"), { recursive: true });
 const copied = manifest.length, over = 0;
 
