@@ -86,7 +86,7 @@ for (const [who, roles] of Object.entries(ROLES)) {
     const gate = await page.locator("[data-testid=gate-message]").count();
     const crashed = await page.getByText("This screen hit a problem").count();
     if (crashed) fail("screen crashed (error boundary)");
-    if (expect === "open" && gate) fail(`should be open for ${who} but is gated: ${(await page.locator("[data-testid=gate-message] h1").first().textContent())}`);
+    if (expect === "open" && gate) fail(`should be open for ${who} but is gated: ${(await page.locator("[data-testid=gate-message]").first().innerText({ timeout: 2000 }).catch(() => "?")).replace(/\n+/g, " ").slice(0, 120)}`);
     if (expect === "gated" && !gate) fail(`should be gated for ${who} but rendered`);
     checked++;
     if (shots && expect === "open") { mkdirSync(shots, { recursive: true }); await page.screenshot({ path: path.join(shots, `${who}${p === "/" ? "-home" : p.replace(/\//g, "-")}.png`), fullPage: true }); }
