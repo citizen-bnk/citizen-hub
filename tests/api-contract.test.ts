@@ -27,7 +27,7 @@ const CALL = /\bapi\.(get|post|put|patch|delete|file)\s*(?:<[^()]*>)?\s*\(\s*([`
 const calls: { where: string; key: string }[] = [];
 for (const root of ["src/features", "src/platform"]) {
   for (const f of files(path.join(import.meta.dirname, "..", root))) {
-    const src = readFileSync(f, "utf8");
+    const src = readFileSync(f, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1"); // examples in comments are not calls
     for (const m of src.matchAll(CALL)) {
       const p = m[3].split("?")[0].replace(/\$\{[^}]*\}/g, "{}");
       calls.push({ where: path.relative(process.cwd(), f), key: `${VERB[m[1]]} ${p}` });
