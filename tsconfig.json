@@ -18,31 +18,11 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "brain": ["./src/brain"], // Kept for backwards compatibility
-      "types": ["./src/apiclient/data-contracts.ts"], // Kept for backwards compatibility
-      // "apiclient": ["./src/apiclient"], // Not exposing directly, import via "app" instead
-      "components/*": ["./src/components/*"],
-      "pages/*": ["./src/pages/*"],
-      "app": ["./src/app"],
-      "app/*": ["./src/app/*"],
-      "utils/*": ["./src/utils/*"],
-      "@/*": ["./src/*"],
-      "@/hooks/*": ["./src/hooks/*"],
-      "@/components/hooks/*": ["./src/hooks/*"],
-      "@/components/ui/*": ["./src/components/ui/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["env.d.ts", "src"],
-  "exclude": [
-    "src/brain/Brain.ts",
-    "src/brain/BrainRoute.ts",
-    "src/brain/data-contracts.ts",
-    "src/brain/http-client.ts",
-    "src/apiclient/Apiclient.ts",
-    "src/apiclient/ApiclientRoute.ts",
-    "src/apiclient/data-contracts.ts",
-    "src/apiclient/http-client.ts"
-  ],
+  "exclude": ["dist", "dist-stub"],
   "references": [
     {
       "path": "./tsconfig.node.json"

@@ -1,13 +1,8 @@
 import { useUser } from "@stackframe/react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/http";
+export { allowed } from "./roles";
 
-export const SUPER_ROLE = "super_admin";
-
-/** Whether `roles` includes any of `allowed`. super_admin may do everything. Unknown role names grant nothing. */
-export function hasAnyRole(roles: readonly string[], allowed: readonly string[]): boolean {
-  return roles.includes(SUPER_ROLE) || roles.some((r) => allowed.includes(r));
-}
 
 export type Session = {
   /** Signed in (the sign-in library knows the person). */

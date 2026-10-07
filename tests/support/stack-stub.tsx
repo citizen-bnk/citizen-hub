@@ -1,7 +1,6 @@
 /**
- * A stand-in for @stackframe/react, used only when the Hub is built with HUB_E2E_STUB=1, so the real screens can be
- * rendered and compared without a real Stack Auth account. A signed-in person is simulated unless the page address
- * has ?signedout=1.
+ * A stand-in for @stackframe/react, used only when the Hub is built with HUB_E2E_STUB=1, so the real screens can be rendered
+ * without a Stack account. `?signedout=1` simulates a signed-out visitor.
  */
 import * as React from "react";
 
@@ -9,25 +8,16 @@ const signedOut = () => typeof window !== "undefined" && new URLSearchParams(win
 const fakeUser = {
   id: "stack-demo-user",
   displayName: "Palesa Demo",
-  primaryEmail: "combined@demo.citizenbank.test",
+  primaryEmail: "demo@demo.citizenbank.test",
   getAuthJson: async () => ({ accessToken: "test-token", refreshToken: "test-refresh" }),
   signOut: async () => {},
 };
 
 export type CurrentUser = typeof fakeUser;
-export type CurrentInternalServerUser = typeof fakeUser;
-
 export function useUser() {
   return signedOut() ? null : fakeUser;
 }
-export function useStackApp() {
-  return stackClientAppLike;
-}
-export const StackProvider = ({ children }: { children: React.ReactNode; app?: unknown }) => <>{children}</>;
-export const StackTheme = ({ children }: { children: React.ReactNode }) => <>{children}</>;
-export const StackHandler = () => <p>Sign-in (stub)</p>;
-
-const stackClientAppLike = {
+const app = {
   urls: { signIn: "/auth/sign-in", signOut: "/auth/sign-out", handler: "/auth", home: "/" },
   getUser: async () => (signedOut() ? null : fakeUser),
   useUser,
@@ -37,8 +27,12 @@ const stackClientAppLike = {
     return { status: "ok" };
   },
 };
+export const useStackApp = () => app;
+export const StackProvider = ({ children }: { children: React.ReactNode; app?: unknown }) => <>{children}</>;
+export const StackTheme = ({ children }: { children: React.ReactNode }) => <>{children}</>;
+export const StackHandler = () => <p>Sign-in (stub)</p>;
 export class StackClientApp {
   constructor(_options?: unknown) {
-    Object.assign(this, stackClientAppLike);
+    Object.assign(this, app);
   }
 }

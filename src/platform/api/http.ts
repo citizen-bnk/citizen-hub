@@ -1,4 +1,4 @@
-import { auth } from "app/auth/auth";
+import { auth } from "../auth/token";
 import { ApiError, fromResponse, networkError } from "./errors";
 
 export type Query = Record<string, string | number | boolean | null | undefined>;
