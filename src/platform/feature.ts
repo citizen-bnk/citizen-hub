@@ -1,7 +1,7 @@
 import type { ComponentType } from "react";
 
 /** The areas of the Hub, in navigation order. A person sees only the areas their roles open. */
-export type Section = "home" | "invest" | "board" | "office" | "admin" | "account";
+export type Section = "home" | "invest" | "board" | "office" | "admin" | "account" | "ai" | "licensing" | "finance" | "risk" | "people" | "projects" | "documents" | "comms";
 
 export const SECTIONS: Record<Section, { label: string; blurb: string }> = {
   home: { label: "Home", blurb: "What needs your attention" },
@@ -10,6 +10,14 @@ export const SECTIONS: Record<Section, { label: string; blurb: string }> = {
   office: { label: "Back office", blurb: "Subscriptions, certificates, members, documents and communications" },
   admin: { label: "Administration", blurb: "Users, roles and board positions" },
   account: { label: "Account", blurb: "Your profile and notifications" },
+  ai: { label: "Citizen AI", blurb: "Permission-aware assistance" },
+  licensing: { label: "Licensing", blurb: "Regulatory readiness and evidence" },
+  finance: { label: "Finance", blurb: "Budgets, treasury and controlled approvals" },
+  risk: { label: "Risk and compliance", blurb: "Controls, registers and incidents" },
+  people: { label: "People and careers", blurb: "Recruitment and people operations" },
+  projects: { label: "Projects", blurb: "Strategy, milestones and delivery" },
+  documents: { label: "Documents", blurb: "Knowledge, permissions and retention" },
+  comms: { label: "Communications", blurb: "Announcements and secure messages" },
 };
 export const SECTION_ORDER = Object.keys(SECTIONS) as Section[];
 
@@ -33,6 +41,8 @@ export type Screen = {
   fromLegacy?: (query: URLSearchParams) => string | null;
   /** Values for the `:params` in `path`, so tests can open the screen. */
   sample?: Record<string, string>;
+  /** Visible in navigation while the designed module is being implemented. */
+  comingSoon?: boolean;
 };
 
 /** A tile the feature contributes to the Home page for the roles that can use it. */

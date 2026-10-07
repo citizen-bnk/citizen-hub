@@ -62,7 +62,7 @@ function SideNav({ nav, pathname, onNavigate }: { nav: NavSection[]; pathname: s
               {n.groups.map((g) => (
                 <div key={g.group ?? "_"}>
                   {g.group && <div className="px-3 pb-1 pt-2 text-[11px] uppercase tracking-wide text-muted-foreground/70">{g.group}</div>}
-                  {g.items.map((i) => <NavItem key={i.screen.path} to={i.screen.path} onNavigate={onNavigate}>{i.screen.title}</NavItem>)}
+                  {g.items.map((i) => <NavItem key={i.screen.path} to={i.screen.path} onNavigate={onNavigate} comingSoon={i.screen.comingSoon}>{i.screen.title}</NavItem>)}
                 </div>
               ))}
             </div>
@@ -73,7 +73,7 @@ function SideNav({ nav, pathname, onNavigate }: { nav: NavSection[]; pathname: s
   );
 }
 
-function NavItem({ to, children, onNavigate }: { to: string; children: React.ReactNode; onNavigate: () => void }) {
+function NavItem({ to, children, onNavigate, comingSoon }: { to: string; children: React.ReactNode; onNavigate: () => void; comingSoon?: boolean }) {
   return (
     <NavLink
       to={to}
@@ -81,7 +81,7 @@ function NavItem({ to, children, onNavigate }: { to: string; children: React.Rea
       onClick={onNavigate}
       className={({ isActive }) => cn("block rounded-lg px-3 py-2 text-sm transition", isActive ? "bg-accent font-medium text-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground")}
     >
-      {children}
+      <span className="flex items-center justify-between gap-2"><span>{children}</span>{comingSoon && <span className="rounded-full border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Coming soon</span>}</span>
     </NavLink>
   );
 }
