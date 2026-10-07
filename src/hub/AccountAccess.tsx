@@ -1,4 +1,4 @@
-import { useStackApp } from "@stackframe/react";
+import { SignIn as AccountSignIn, StackTheme, useStackApp } from "@stackframe/react";
 import { LogIn } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Footer } from "components/Footer";
@@ -12,26 +12,23 @@ import { startHandoff } from "utils/platform";
 type DemoAccount = { key: string; email: string; roles: string[]; description: string };
 type DemoAccounts = { accounts: DemoAccount[]; password: string | null };
 
-/**
- * The Hub's own sign-in, reached only when the website's session is not shared with the Hub. In the demonstration
- * environment it is a picker of the demo accounts that open the Hub; anywhere else it hands over to the normal Stack form.
- */
-export default function HubDemoSignIn() {
+/** Normal account access with an optional, server-enabled demonstration selector. */
+export default function HubSignIn() {
   const app = useStackApp();
   const autoStarted = useRef(false);
   const [data, setData] = useState<DemoAccounts | null | undefined>(undefined);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showAccounts, setShowAccounts] = useState(() => Boolean(new URLSearchParams(window.location.search).get("demo_account")));
   const next = localReturn(new URLSearchParams(window.location.search).get("after_auth_return_to"), window.location.origin);
 
-  const manual = () => {
+  useEffect(() => {
     try {
       localStorage.setItem("dtbn-login-next", next);
     } catch {
       /* private mode: sign-in still works and lands on the home page */
     }
-    window.location.replace(`${app.urls.signIn}?manual=1`);
-  };
+  }, [next]);
 
   useEffect(() => {
     fetch("/api/platform/demo-accounts", { headers: { Accept: "application/json" }, cache: "no-store" })
@@ -63,25 +60,17 @@ export default function HubDemoSignIn() {
     if (account && data?.password && !autoStarted.current) { autoStarted.current = true; void signInAs(account); }
   }, [data]);
 
-  if (data === undefined) {
-    return (
-      <main className="flex min-h-screen items-center justify-center text-muted-foreground">
-        <p>Loading…</p>
-      </main>
-    );
-  }
-
-  if (!data?.password) return <div className="flex min-h-screen flex-col items-center justify-center gap-4"><h1>Citizen Hub sign-in</h1><Button onClick={manual}>Sign in with your Citizen account</Button><a href={websiteUrl("/")}>Back to Citizen Bank website</a></div>;
-
-  const hubAccounts = data.accounts;
+  const hubAccounts = data?.password ? data.accounts : [];
   return (
     <div className="flex min-h-screen flex-col">
       <main className="mx-auto w-full max-w-4xl flex-1 space-y-4 px-4 py-10">
-        <h1 className="text-3xl font-bold">Citizen Hub demonstration</h1>
+        <h1 className="text-3xl font-bold">Sign in to Citizen Hub</h1>
         <a href={websiteUrl("/")} className="inline-block underline">Back to Citizen Bank website</a>
-        <p className="text-muted-foreground">Pick an account to be signed in at once. Banking is simulated and no real money moves.</p>
+        {!showAccounts && <StackTheme><AccountSignIn fullPage={false} /></StackTheme>}
+        {data?.password && <Button variant="outline" aria-expanded={showAccounts} aria-controls="account-options" onClick={() => setShowAccounts(!showAccounts)} disabled={busy !== null}>{showAccounts ? "Use my Citizen account" : "Try a demonstration account"}</Button>}
+        {showAccounts && data?.password && <p className="text-muted-foreground">Choose a fictional account to explore the ecosystem. Banking is simulated and no real money moves.</p>}
         {error && <p role="alert" className="rounded-md border border-destructive/50 p-3 text-sm text-destructive" data-testid="sign-in-error">{error}</p>}
-        <div className="grid gap-3 md:grid-cols-2" data-testid="accounts">
+        {showAccounts && data?.password && <div id="account-options" className="grid gap-3 md:grid-cols-2" data-testid="accounts">
           {hubAccounts.map((a) => (
             <Card key={a.key} data-testid={`account-${a.key}`}>
               <CardHeader className="pb-2">
@@ -96,8 +85,7 @@ export default function HubDemoSignIn() {
               </CardContent>
             </Card>
           ))}
-        </div>
-        <Button variant="outline" onClick={manual}>Use another account</Button>
+        </div>}
       </main>
       <Footer />
     </div>

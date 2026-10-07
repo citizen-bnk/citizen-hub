@@ -26,6 +26,7 @@ export function useStackApp() {
 export const StackProvider = ({ children }: { children: React.ReactNode; app?: unknown }) => <>{children}</>;
 export const StackTheme = ({ children }: { children: React.ReactNode }) => <>{children}</>;
 export const StackHandler = () => <p>Sign-in (stub)</p>;
+export const SignIn = () => <p>Sign in with your Citizen account (stub)</p>;
 
 const stackClientAppLike = {
   urls: { signIn: "/auth/sign-in", signOut: "/auth/sign-out", handler: "/auth", home: "/" },

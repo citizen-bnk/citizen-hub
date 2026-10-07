@@ -5,12 +5,12 @@ import { useLocation } from "react-router-dom";
 import { stackClientApp } from "./stack";
 import { joinPaths } from "./utils";
 
-import HubDemoSignIn from "../../hub/HubDemoSignIn";
+import HubSignIn from "../../hub/AccountAccess";
 import { websiteUrl } from "../../hub/config";
 
 export const StackHandlerRoutes = () => {
   const location = useLocation();
-  if (location.pathname.endsWith("/sign-in") && new URLSearchParams(location.search).get("manual") !== "1") return <HubDemoSignIn />;
+  if (location.pathname.endsWith("/sign-in") && new URLSearchParams(location.search).get("manual") !== "1") return <HubSignIn />;
 
   return (
     <StackTheme>

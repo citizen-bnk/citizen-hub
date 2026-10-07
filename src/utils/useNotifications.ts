@@ -172,12 +172,12 @@ export function useNotifications(): UseNotificationsResult {
       // 4. Check share subscription if investor
       if (roles.includes('investor')) {
         try {
-          const subsRes = await brain.get_my_subscriptions();
+          const subsRes = await brain.core_get_my_public_subscriptions();
           const subsData = await subsRes.json();
 
           // Check for pending payment subscriptions
           const pendingPayment = subsData.subscriptions?.filter(
-            (sub: any) => sub.status === 'pending_payment'
+            (sub: any) => ['pending', 'partial'].includes(sub.status) && Number(sub.amount_paid) < Number(sub.total_amount)
           );
 
           if (pendingPayment && pendingPayment.length > 0) {

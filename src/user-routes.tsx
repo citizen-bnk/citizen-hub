@@ -2,7 +2,7 @@ import { lazy } from "react";
 import { type RouteObject } from "react-router-dom";
 import { LoginRedirect, StackHandlerRoutes, UserGuard } from "app/auth";
 import ExternalRedirect from "./hub/ExternalRedirect";
-import HubDemoSignIn from "./hub/HubDemoSignIn";
+import HubSignIn from "./hub/AccountAccess";
 import { businessRoutes } from "./business-routes";
 
 // The screens that live in the Hub. Same addresses as on the website, so bookmarks and emailed links keep working.
@@ -29,8 +29,8 @@ export const userRoutes: RouteObject[] = [
   { path: "/meeting-details", element: guarded(<MeetingDetails />) },
   { path: "/meetingdetails", element: guarded(<MeetingDetails />) },
   // Sign-in on the Hub itself, used only when the website's session is not shared with it (see UserGuard).
-  { path: "/demo", element: <HubDemoSignIn /> },
-  { path: "/login", element: <HubDemoSignIn /> },
+  { path: "/demo", element: <HubSignIn /> },
+  { path: "/login", element: <HubSignIn /> },
   { path: "/auth/redirect", element: <LoginRedirect /> },
   { path: "/auth/*", element: <StackHandlerRoutes /> },
   // everything else is the website's

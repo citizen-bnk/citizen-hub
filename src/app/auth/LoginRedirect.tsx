@@ -1,6 +1,7 @@
 import { useStackApp } from "@stackframe/react";
 import { Navigate } from "react-router-dom";
 import { identify } from "app/analytics";
+import { localReturn } from "../../hub/signin";
 
 const popFromLocalStorage = (key: string): string | null => {
   if (typeof window !== "undefined" && window.localStorage) {
@@ -30,7 +31,7 @@ export const LoginRedirect = () => {
     queryParams.get("next") || popFromLocalStorage("dtbn-login-next");
 
   if (next) {
-    return <Navigate to={next} replace={true} />;
+    return <Navigate to={localReturn(next, window.location.origin)} replace={true} />;
   }
 
   return <Navigate to="/" replace={true} />;
