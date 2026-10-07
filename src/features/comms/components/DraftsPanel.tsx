@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useUser } from "@stackframe/react";
+import { useSession } from "@/platform/auth/session";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { dateTime } from "@/platform/format";
@@ -17,7 +17,7 @@ const STATUSES = ["", "draft", "approved", "sent", "cancelled"];
 export function DraftsPanel() {
   const [status, setStatus] = useState("");
   const list = useDrafts(status);
-  const user = useUser();
+  const { userId } = useSession();
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [open, setOpen] = useState<number | null>(null);
   const [notice, setNotice] = useState("");
@@ -50,7 +50,7 @@ export function DraftsPanel() {
                 </select>
                 <span className="text-xs text-muted-foreground">{Object.entries(counts).map(([k, n]) => `${n} ${k}`).join(" · ")}</span>
                 <span className="ml-auto flex gap-2">
-                  <Button size="sm" variant="outline" disabled={busy || !user || ids("approve").length === 0} onClick={() => user && approve.mutate({ ids: ids("approve"), userId: user.id })}>
+                  <Button size="sm" variant="outline" disabled={busy || !userId || ids("approve").length === 0} onClick={() => userId && approve.mutate({ ids: ids("approve"), userId })}>
                     Approve ({ids("approve").length})
                   </Button>
                   <Button size="sm" disabled={busy || ids("send").length === 0} onClick={() => send.mutate(ids("send"))}>Send ({ids("send").length})</Button>

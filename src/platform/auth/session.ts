@@ -7,6 +7,8 @@ export { allowed } from "./roles";
 export type Session = {
   /** Signed in (the sign-in library knows the person). */
   signedIn: boolean;
+  /** The sign-in provider's id for the person (what the backend calls user_id). */
+  userId: string | null;
   name: string;
   email: string | null;
   /** Roles from the backend, the same ones it enforces. Empty until loaded. */
@@ -27,6 +29,7 @@ export function useSession(): Session {
   });
   return {
     signedIn: !!user,
+    userId: user?.id ?? null,
     name: user?.displayName || user?.primaryEmail || "Account",
     email: user?.primaryEmail ?? null,
     roles: roles.data ?? [],
