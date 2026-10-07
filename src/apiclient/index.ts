@@ -1,6 +1,6 @@
 import { auth } from "app/auth";
 import { API_HOST, API_PATH } from "../constants";
-import { Apiclient } from "./Apiclient";
+import { BusinessClient } from "./BusinessClient";
 import type { RequestParams } from "./http-client";
 
 const constructBaseUrl = (): string => {
@@ -24,7 +24,7 @@ const constructClient = () => {
   const baseUrl = constructBaseUrl();
   const baseApiParams = constructBaseApiParams();
 
-  return new Apiclient({
+  return new BusinessClient({
     baseUrl,
     baseApiParams,
     customFetch: (url, options) => {

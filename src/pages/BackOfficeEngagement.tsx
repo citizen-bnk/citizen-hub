@@ -22,7 +22,7 @@ import type {
   EngagementStats,
   FeatureHighlight,
   EngagementConfigModel
-} from "types";
+} from "../apiclient/BusinessClient";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -303,7 +303,7 @@ const BackOfficeEngagement = () => {
       // Load all features for management
       const response = await apiClient.list_feature_highlights({ active_only: false });
       const data = await response.json();
-      setFeatures(data.features || []);
+      setFeatures(data);
       
       // Load next feature for preview
       try {
