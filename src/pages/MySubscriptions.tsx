@@ -184,7 +184,7 @@ export default function MySubscriptions() {
 
   const viewDetails = async (subscriptionId: string) => {
     try {
-      const response = await brain.get_subscription_details({ subscriptionId });
+      const response = await brain.core_get_subscription_details({ subscriptionId });
       const data = await response.json();
       setSelectedSubscription(data);
       setDetailsOpen(true);
