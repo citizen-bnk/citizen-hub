@@ -10,6 +10,7 @@ import { features } from "../../features";
 import { type NavSection, landing, navFor } from "../registry";
 import { WEBSITE_URL, websiteUrl } from "../config";
 import { Bell } from "../notifications/Bell";
+import { usePolicy } from "../policy";
 import { cn } from "@/lib/utils";
 
 /**
@@ -130,10 +131,11 @@ function TopBar({ onMenu, menuOpen }: { onMenu: () => void; menuOpen: boolean })
 }
 
 function Footer() {
+  const p = usePolicy().policies;
   return (
     <footer className="border-t">
       <div className="mx-auto flex max-w-[1400px] flex-col gap-3 px-4 py-5 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-        <p>© {new Date().getFullYear()} Citizen Digital Ltd. Citizen Bank is an applicant for a banking licence from the Central Bank of Lesotho and does not yet carry on banking business.</p>
+        <p>© {new Date().getFullYear()} {p["legal.footer"]}</p>
         <nav className="flex gap-4" aria-label="Legal">
           {[["Privacy", "/privacy-policy"], ["Terms", "/terms-of-service"], ["Disclosures", "/disclosures"], ["Contact", "/contact"]].map(([l, p]) => (
             <a key={p} href={websiteUrl(p)} className="hover:text-foreground">{l}</a>

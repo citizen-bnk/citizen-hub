@@ -39,7 +39,7 @@ export const getUnmapped = () => api.get<{ unmapped_members: Unmapped[] }>("/boa
 export const getAvailableUsers = () => api.get<{ users: AvailableUser[] }>("/board-mapping/available-users").then((r) => r.users);
 export const getDashboard = () => api.get<Dashboard>("/board/dashboard");
 
-export const appoint = (v: { user_id: string; position: string; term_years: number }) => api.post("/back-office/board/appoint", v);
+export const appoint = (v: { user_id: string; position: string; position_id?: number; term_years: number }) => api.post("/back-office/board/appoint", v);
 export const updateMember = (v: { userId: string; position?: string; term_end_date?: string; status?: string }) =>
   api.put(`/back-office/board/members/${v.userId}`, { position: v.position || undefined, term_end_date: v.term_end_date || undefined, status: v.status });
 export const removeMember = (userId: string) => api.delete(`/back-office/board/members/${userId}`);

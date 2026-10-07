@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { appointSchema, assignSchema, docState, fieldErrors, filterMembers, investmentState, needsLink, positionSchema, sharesLine, termDaysLeft, termWords } from "./logic";
+import { positionCode, positionOptions, appointSchema, assignSchema, docState, fieldErrors, filterMembers, investmentState, needsLink, positionSchema, sharesLine, termDaysLeft, termWords } from "./logic";
 
 const m = (over: Record<string, unknown> = {}) => ({
   user_id: "u1", full_name: "Palesa Mokoena", email: "palesa@example.com", position_name: "Chairman", status: "active",
@@ -43,7 +43,7 @@ test("term wording", () => {
 });
 
 test("appoint validation", () => {
-  const bad = appointSchema.safeParse({ user_id: "", position: "king", term_years: 9 });
+  const bad = appointSchema.safeParse({ user_id: "", position: "", term_years: 9 });
   assert.equal(bad.success, false);
   if (!bad.success) assert.deepEqual(Object.keys(fieldErrors(bad.error)).sort(), ["position", "term_years", "user_id"]);
   assert.equal(appointSchema.parse({ user_id: "u1", position: "director", term_years: "3" }).term_years, 3);
@@ -60,4 +60,12 @@ test("shares line", () => {
   assert.deepEqual(sharesLine(10, 25), { text: "10 of 25 shares: 15 more needed", met: false });
   assert.equal(sharesLine(30, 25).met, true);
   assert.equal(sharesLine(5, null).met, null);
+});
+
+test("appoint positions come from the defined board positions, highest rank first", () => {
+  assert.equal(positionCode(" Vice Chairman "), "vice_chairman");
+  assert.equal(positionCode("Deputy Chair (Acting)"), "deputy_chair_acting");
+  const o = positionOptions([{ id: 3, position_name: "Director", position_level: 5 }, { id: 9, position_name: "Deputy Chair", position_level: 2 }]);
+  assert.deepEqual(o.map((x) => [x.value, x.label, x.id]), [["deputy_chair", "Deputy Chair", 9], ["director", "Director", 3]]);
+  assert.deepEqual(positionOptions(undefined), []);
 });

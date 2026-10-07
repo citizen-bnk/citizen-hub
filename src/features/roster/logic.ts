@@ -66,19 +66,16 @@ export function termWords(days: number | null): string {
   return days < 0 ? `Ended ${span} ago` : days === 0 ? "Ends today" : `${span} left`;
 }
 
-/** The position names the backend accepts when appointing (back_office_board appoint). */
-export const APPOINT_POSITIONS = [
-  { value: "chairman", label: "Chairman" },
-  { value: "vice_chairman", label: "Vice chairman" },
-  { value: "director", label: "Director" },
-  { value: "secretary", label: "Secretary" },
-  { value: "treasurer", label: "Treasurer" },
-  { value: "member", label: "Member" },
-] as const;
+/** What the appoint endpoint takes for a position: the name as a lower-case code ("Vice Chairman" -> "vice_chairman"). */
+export const positionCode = (name: string) => name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+
+/** The choices for the appoint form, from the board positions the back office defined, highest rank first. */
+export const positionOptions = (positions: readonly { id: number; position_name: string; position_level: number }[] | undefined) =>
+  [...(positions ?? [])].sort((a, b) => a.position_level - b.position_level).map((p) => ({ value: positionCode(p.position_name), label: p.position_name, id: p.id }));
 
 export const appointSchema = z.object({
   user_id: z.string().min(1, "Choose a person"),
-  position: z.enum(["chairman", "vice_chairman", "director", "secretary", "treasurer", "member"], { errorMap: () => ({ message: "Choose a position" }) }),
+  position: z.string().min(1, "Choose a position"),
   term_years: z.preprocess((v) => Number(v), z.number().int().min(1, "At least 1 year").max(6, "At most 6 years")),
 });
 

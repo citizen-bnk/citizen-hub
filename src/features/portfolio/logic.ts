@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DEFAULT_PLANS } from "@/platform/policy/defaults";
 
 /** Pure rules for subscriptions, amounts and the buy flow. Amounts arrive as numbers or numeric strings. */
 const n = (v: number | string | null | undefined) => Number(v) || 0;
@@ -84,17 +85,20 @@ export function checkQuantity(shares: number, limits: { min: number; max: number
   return null;
 }
 
-export const PLANS = [
-  { value: "one-time", label: "Pay in full", months: 1 },
-  { value: "3-months", label: "3 monthly instalments", months: 3 },
-  { value: "6-months", label: "6 monthly instalments", months: 6 },
-  { value: "12-months", label: "12 monthly instalments", months: 12 },
-] as const;
-export type Plan = (typeof PLANS)[number]["value"];
+/** A payment plan is a code and a number of months; the list comes from the policy (usePlans), these functions take it as an argument. */
+export type Plan = string;
+export type PlanDef = { code: string; label: string; months: number };
 
-export const monthlyAmount = (total: number, plan: Plan) => total / (PLANS.find((p) => p.value === plan)?.months ?? 1);
+const monthsOf = (plan: Plan, plans: readonly PlanDef[]) => plans.find((p) => p.code === plan)?.months ?? 1;
+/** Paid over more than one month. An unknown plan counts as paying in full. */
+export const isInstalment = (plan: Plan, plans: readonly PlanDef[] = DEFAULT_PLANS) => monthsOf(plan, plans) > 1;
+/** The plan to start on: pay in full when offered, else the first one. */
+export const defaultPlan = (plans: readonly PlanDef[] = DEFAULT_PLANS): Plan => (plans.find((p) => p.months === 1) ?? plans[0] ?? DEFAULT_PLANS[0]).code;
+
+export const monthlyAmount = (total: number, plan: Plan, plans: readonly PlanDef[] = DEFAULT_PLANS) => total / monthsOf(plan, plans);
 /** The board endpoint speaks "one_time" and a number of months. */
-export const boardPlan = (plan: Plan) => (plan === "one-time" ? { payment_method: "one_time" } : { payment_method: "installment", installment_months: PLANS.find((p) => p.value === plan)!.months });
+export const boardPlan = (plan: Plan, plans: readonly PlanDef[] = DEFAULT_PLANS) =>
+  isInstalment(plan, plans) ? { payment_method: "installment", installment_months: monthsOf(plan, plans) } : { payment_method: "one_time" };
 
 /** The details the subscribe endpoint needs. */
 export const detailsSchema = z.object({

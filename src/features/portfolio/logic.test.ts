@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { boardPlan, canRequestCertificate, checkQuantity, daysLeft, detailsSchema, documentsFor, fieldErrors, investorOffer, isOutstanding, monthlyAmount, offeredClasses, orderTotal, paidPercent, remaining, summarise, type ShareClass } from "./logic";
+import { defaultPlan, isInstalment, boardPlan, canRequestCertificate, checkQuantity, daysLeft, detailsSchema, documentsFor, fieldErrors, investorOffer, isOutstanding, monthlyAmount, offeredClasses, orderTotal, paidPercent, remaining, summarise, type ShareClass } from "./logic";
 
 const sub = (o: Partial<Parameters<typeof summarise>[0][number]> = {}) => ({ status: "pending", total_amount: "1000.00", amount_paid: "250", num_shares: 100, certificate_number: null, ...o });
 
@@ -65,6 +65,14 @@ test("totals, instalments and the investor offer", () => {
   assert.equal(monthlyAmount(1200, "6-months"), 200);
   assert.equal(monthlyAmount(1200, "one-time"), 1200);
   assert.deepEqual(boardPlan("one-time"), { payment_method: "one_time" });
+  // plans come from the policy: a code the defaults do not know, with its own months
+  const plans = [{ code: "full", label: "Full", months: 1 }, { code: "q4", label: "Four", months: 4 }];
+  assert.equal(monthlyAmount(1200, "q4", plans), 300);
+  assert.deepEqual(boardPlan("q4", plans), { payment_method: "installment", installment_months: 4 });
+  assert.equal(isInstalment("full", plans), false);
+  assert.equal(isInstalment("gone", plans), false);
+  assert.equal(defaultPlan(plans), "full");
+  assert.equal(defaultPlan([]), "one-time");
   assert.deepEqual(boardPlan("3-months"), { payment_method: "installment", installment_months: 3 });
   const o = investorOffer({ remaining: 800, price_per_share: "10", min_subscription: 100, max_subscription: 1000 });
   assert.equal(o.classes[0].max_shares, 800);

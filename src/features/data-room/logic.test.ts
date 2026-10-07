@@ -26,11 +26,11 @@ test("access summary", () => {
 });
 
 test("signing needs a name, and LOI details only when the LOI is picked", () => {
-  assert.ok(signingErrors("", ["ncnda"], emptyLoi).signature);
-  assert.deepEqual(signingErrors("Thabo Mokoena", ["ncnda", "terms"], emptyLoi), {});
-  const e = signingErrors("Thabo Mokoena", ["letter_of_intent"], { ...emptyLoi, investment_amount: "-5", contact_email: "nope" });
+  assert.ok(signingErrors("", ["ncnda"], emptyLoi()).signature);
+  assert.deepEqual(signingErrors("Thabo Mokoena", ["ncnda", "terms"], emptyLoi()), {});
+  const e = signingErrors("Thabo Mokoena", ["letter_of_intent"], { ...emptyLoi(), investment_amount: "-5", contact_email: "nope" });
   assert.ok(e.investor_name && e.investment_amount && e.contact_email);
-  assert.deepEqual(signingErrors("Thabo Mokoena", ["letter_of_intent"], { ...emptyLoi, investor_name: "Thabo", investment_amount: "250000", contact_email: "t@x.co" }), {});
+  assert.deepEqual(signingErrors("Thabo Mokoena", ["letter_of_intent"], { ...emptyLoi(), investor_name: "Thabo", investment_amount: "250000", contact_email: "t@x.co" }), {});
 });
 
 test("access reason needs a few words", () => {

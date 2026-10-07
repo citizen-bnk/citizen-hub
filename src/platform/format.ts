@@ -1,7 +1,10 @@
+import { policy } from "./policy/current";
+
 /** Money and dates, formatted one way everywhere. */
 const FALLBACK = "—";
 
-export function money(amount: number | string | null | undefined, currency = "LSL"): string {
+/** `currency` defaults to the base currency from the policy (LSL until the backend says otherwise). */
+export function money(amount: number | string | null | undefined, currency: string = policy("app.base_currency")): string {
   const n = typeof amount === "string" ? Number(amount) : amount;
   if (n === null || n === undefined || Number.isNaN(n)) return FALLBACK;
   return `${currency} ${n.toLocaleString("en-ZA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

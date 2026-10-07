@@ -55,7 +55,7 @@ const TONES: Record<string, string> = {
   muted: "bg-muted text-muted-foreground",
 };
 const STATUS_TONE: [RegExp, keyof typeof TONES][] = [
-  [/^(paid|approved|active|completed|issued|signed|open|sent|accepted|compliant|verified|available)/, "good"],
+  [/^(paid|published|approved|active|completed|issued|signed|open|sent|accepted|compliant|verified|available)/, "good"],
   [/^(pending|partial|draft|scheduled|awaiting|submitted|in_review|review|invited|queued)/, "warn"],
   [/^(rejected|failed|cancel|revoked|expired|overdue|suspended|declined|missing|inactive|closed)/, "bad"],
 ];

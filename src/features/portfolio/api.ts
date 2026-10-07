@@ -35,7 +35,7 @@ export const getDetail = (id: string) => api.get<SubscriptionDetail>(`/subscript
 export const getRequests = () => api.get<{ requests: CertificateRequest[] }>("/certificate-requests/my-requests");
 export const requestCertificate = (subscription_id: string) => api.post("/certificate-requests/request-certificate", { subscription_id });
 
-export const getBank = () => api.get<BankAccount>("/bank-accounts/get-default-bank-account", { currency: "LSL" });
+export const getBank = (currency: string) => api.get<BankAccount>("/bank-accounts/get-default-bank-account", { currency });
 export const getCryptos = () => api.get<{ available_cryptos: { crypto_type: string; network_info: string | null }[] }>("/crypto-wallets/available");
 export const getWallet = (type: string) => api.get<{ crypto_type: string; wallet_address: string; network_info: string | null }>(`/crypto-wallets/${type}/details`);
 

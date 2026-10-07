@@ -3,6 +3,8 @@ import { api } from "@/platform/api/http";
 // --- investor side
 export type Access = { has_access: boolean; ncnda_signed: boolean; terms_signed: boolean; loi_agreed: boolean; missing_agreements: string[] };
 export type Ncnda = { version: string; content: string; effective_date: string };
+/** The current wording of an agreement (terms, loi): what is shown before signing, with its version. */
+export type AgreementText = { version: string; title: string; content: string };
 export type InvestorDoc = {
   id: number; category_id: number | null; category_name: string | null; document_name: string; file_size: number | null;
   version: string; description: string | null; is_required_for_license: boolean;
@@ -12,6 +14,7 @@ export type Opened = { file_url: string; document_name: string; access_logged: b
 export const checkAccess = () => api.get<Access>("/data-room/investor/check-access");
 export const myStatus = () => api.get<import("./logic").MyStatus>("/data-room/investor/agreements/my-status");
 export const currentNcnda = () => api.get<Ncnda>("/data-room/investor/agreements/ncnda/current");
+export const currentAgreement = (type: string) => api.get<AgreementText>(`/data-room/agreements/${type}/current`);
 export const investorDocuments = () => api.get<InvestorDoc[]>("/data-room/investor/documents");
 export const openDocument = (v: { id: number; reason: string }) =>
   api.post<Opened>(`/data-room/investor/document/${v.id}/access`, { access_reason: v.reason });

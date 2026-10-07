@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { editable, initials, maskId, missingSections, rowsOf, sectionById, sectionPayload, shown, visibleSections } from "./sections";
+import { optionsFor, editable, initials, maskId, missingSections, rowsOf, sectionById, sectionPayload, shown, visibleSections } from "./sections";
 import { emptyForm } from "./logic";
 
 const profile = { full_name: "Thabo Mokoena", email: "t@example.com", phone: "+266 5800 1234", id_number: "LS1234567", account_type: "personal", date_of_birth: "1988-04-02", gender: "male", city: "Maseru", country: "Lesotho" };
@@ -38,4 +38,14 @@ test("initials and the sections still to fill in", () => {
   assert.equal(initials("  naledi "), "N");
   assert.equal(initials(""), "?");
   assert.deepEqual(missingSections(profile, []).map((s) => s.id), ["work"]);
+});
+
+test("choices come from the policy lists, with the empty choice where an answer is optional", () => {
+  const gender = sectionById("identity").fields.find((f) => f.name === "gender")!;
+  assert.deepEqual(optionsFor(gender).map((o) => o[0]), ["", "male", "female", "other"]);
+  const lists = { gender: [{ code: "nb", label: "Non-binary", display_order: 1 }] };
+  assert.deepEqual(optionsFor(gender, lists), [["", "Prefer not to say"], ["nb", "Non-binary"]]);
+  assert.equal(shown(gender, { gender: "nb" }, lists), "Non-binary");
+  assert.equal(shown(gender, { gender: "male" }, lists), "Male");
+  assert.deepEqual(optionsFor(sectionById("identity").fields.find((f) => f.name === "account_type")!).map((o) => o[0]), ["personal", "business"]);
 });

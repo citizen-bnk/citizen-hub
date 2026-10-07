@@ -5,18 +5,15 @@ import { Label } from "@/components/ui/label";
 import { Field, Panel, PrimaryButton, Status } from "@/platform/ui/kit";
 import { PageState } from "@/platform/ui/PageState";
 import { date } from "@/platform/format";
-import { useNcnda, useSign } from "../hooks";
-import { loiFromProfile, signingErrors, unsigned, type AgreementKey, type AgreementRow, type LoiForm } from "../logic";
-
-const TEXT: Record<Exclude<AgreementKey, "ncnda">, string> = {
-  terms: "I accept the terms and conditions for using the data room: the documents are confidential, are for my own evaluation of an investment, and every time I open one is recorded.",
-  letter_of_intent: "I confirm my intention to invest and give the details below so the office can review them.",
-};
+import { useAgreementText, useNcnda, useSign } from "../hooks";
+import { FALLBACK_TEXT, loiFromProfile, signingErrors, unsigned, type AgreementKey, type AgreementRow, type LoiForm } from "../logic";
 
 /** Shown until the three agreements are signed: read each one, tick what you accept, sign once. */
 export default function AgreementsGate({ rows }: { rows: AgreementRow[] }) {
   const todo = unsigned(rows);
   const ncnda = useNcnda(todo.some((r) => r.key === "ncnda"));
+  const terms = useAgreementText("terms", todo.some((r) => r.key === "terms"));
+  const loiText = useAgreementText("loi", todo.some((r) => r.key === "letter_of_intent"));
   const sign = useSign();
   const [picked, setPicked] = useState<AgreementKey[]>(todo.map((r) => r.key));
   // Name, contact details and investment purpose come from the profile; the person only edits what differs.
@@ -35,7 +32,7 @@ export default function AgreementsGate({ rows }: { rows: AgreementRow[] }) {
     const clean = signingErrors(signature, picked, loi);
     setErrors(clean);
     if (Object.keys(clean).length || picked.length === 0) return;
-    sign.mutate({ signature: signature.trim(), keys: picked, ncndaVersion: ncnda.data?.version ?? "1.0", loi });
+    sign.mutate({ signature: signature.trim(), keys: picked, versions: { ncnda: ncnda.data?.version, terms: terms.data?.version, letter_of_intent: loiText.data?.version }, loi });
   };
 
   return (
@@ -55,7 +52,7 @@ export default function AgreementsGate({ rows }: { rows: AgreementRow[] }) {
               )}
             </PageState>
           ) : (
-            <p className="text-sm">{TEXT[r.key]}</p>
+            <AgreementWording text={r.key === "terms" ? terms.data : loiText.data} fallback={FALLBACK_TEXT[r.key]} />
           )}
           {r.key === "letter_of_intent" && (
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -84,6 +81,16 @@ export default function AgreementsGate({ rows }: { rows: AgreementRow[] }) {
           {sign.isPending ? "Signing…" : picked.length === todo.length ? "Sign all and open the data room" : `Sign ${picked.length} selected`}
         </PrimaryButton>
       </Panel>
+    </div>
+  );
+}
+
+/** The current wording from the backend, with its version; the built-in sentence when there is none. */
+function AgreementWording({ text, fallback }: { text?: { version: string; content: string }; fallback: string }) {
+  return (
+    <div>
+      {text && <div className="mb-2 text-xs text-muted-foreground">Version {text.version}</div>}
+      <p className="whitespace-pre-wrap text-sm">{text?.content || fallback}</p>
     </div>
   );
 }

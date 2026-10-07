@@ -65,11 +65,30 @@ export default defineFeature({
 A screen may set its own `section` and `roles` (a member's view under Board, the staff view under Back office).
 Use paths under `/office/...` for back-office screens and `/admin/...` for administration.
 
+## Reading policy (data driven values)
+
+Wording, currency, payment plans and option lists are owned by the backend (`GET /api/policy`) and read through
+`@/platform/policy`. Never write such a value into a screen; read it, and keep a typed default so the screen still renders when
+the endpoint is down (`src/platform/policy/defaults.ts` holds the defaults; a new key is added there, in the zod table in
+`logic.ts`, and in the fixture `src/platform/fixtures.ts`).
+
+```ts
+const p = usePolicy().policies;            // components: p["legal.footer"], p["app.base_currency"]
+const plans = usePlans();                  // [{ code, label, months, ... }] in display order
+const genders = useList("gender");         // [[code, label], ...]; [] for an unknown list
+policy("app.default_country");             // outside React (pure helpers, formatters): the latest value, never undefined
+```
+
+Pure functions in `logic.ts` take what they need as an argument with the defaults as the default value
+(`monthlyAmount(total, plan, plans = DEFAULT_PLANS)`), so unit tests need no backend and no React. A value the backend returns
+from another endpoint (agreement text, board positions) is an ordinary query with `meta: { silent: true }` and a built-in fallback
+when it is for display. Do not add a `try/catch` for it: the policy hook already never throws.
+
 ## fixtures.ts and the render test
 
 `npm run test:render` builds the app with sign-in stubbed, opens every screen as every demo role (customer, investor,
 shareholder, board, staff, admin, combined), and fails on any page error, any API call without a fixture, a screen that should be
-open but is gated, or one that should be gated but opens. Provide a fixture for every GET your screens make on load:
+open but is gated, or one that should be gated but opens. Provide a fixture for every GET your screens make on load (platform-level reads such as the policy have theirs in `src/platform/fixtures.ts`):
 
 ```ts
 export default {

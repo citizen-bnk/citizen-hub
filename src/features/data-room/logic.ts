@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { policy } from "@/platform/policy/current";
 
 /** The three agreements that unlock the data room, in the order they are signed. `key` is the backend's agreement_type. */
 export const AGREEMENTS = [
@@ -60,16 +61,22 @@ export const loiSchema = z.object({
   investment_purpose: z.string().trim(),
 });
 export type LoiForm = z.infer<typeof loiSchema>;
-export const emptyLoi: LoiForm = {
-  investor_name: "", entity_name: "", entity_type: "", registration_number: "", investment_amount: "",
-  investment_currency: "LSL", contact_email: "", contact_phone: "", investment_purpose: "",
+/** The wording shown when the backend has no current text for an agreement (or cannot be reached). */
+export const FALLBACK_TEXT: Record<Exclude<AgreementKey, "ncnda">, string> = {
+  terms: "I accept the terms and conditions for using the data room: the documents are confidential, are for my own evaluation of an investment, and every time I open one is recorded.",
+  letter_of_intent: "I confirm my intention to invest and give the details below so the office can review them.",
 };
+
+export const emptyLoi = (): LoiForm => ({
+  investor_name: "", entity_name: "", entity_type: "", registration_number: "", investment_amount: "",
+  investment_currency: policy("app.base_currency"), contact_email: "", contact_phone: "", investment_purpose: "",
+});
 
 /** The letter of intent starts from the person's profile, so nothing they already told us is typed again. Still editable. */
 export function loiFromProfile(p: Partial<Record<string, unknown>> | null | undefined): LoiForm {
   const text = (k: string) => (typeof p?.[k] === "string" ? (p[k] as string) : "");
   return {
-    ...emptyLoi,
+    ...emptyLoi(),
     investor_name: text("full_name"), contact_email: text("email"), contact_phone: text("phone"),
     entity_name: text("business_name"), registration_number: text("company_registration_number"), investment_purpose: text("investment_purpose"),
   };

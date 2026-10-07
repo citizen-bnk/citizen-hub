@@ -22,7 +22,7 @@ error handling repeated on every screen. An audit of every screen (purpose, user
 same jobs repeated in several places: two subscription lists, three certificate lists, two invitation screens, three data-room
 screens, a board-documents screen and a licence-documents screen, a dashboard per role.
 
-## The reduction: 50 screens become 14 features
+## The reduction: 50 screens become 15 features
 
 | Feature | Replaces (old screens) | Screens in the new Hub |
 |---|---|---|
@@ -37,8 +37,53 @@ screens, a board-documents screen and a licence-documents screen, a dashboard pe
 | **certificates** | BackOfficeCertificates, BackOfficeCertificateTemplates, SignCertificate, CertificateRegistry | Certificates list with actions (sign, revoke, resend, regenerate, download); templates |
 | **people** | BoardPortalInvitations, BackOfficeInvitations, BackOfficeInvestorLeads, AdminUsers, AdminUserDetail | One invitations screen; investor leads; users and roles with a detail panel and history |
 | **settings** | BackOfficeShareClasses, BackOfficeBankAccounts, BackOfficeCryptoWallets | One settings screen: share classes, payment accounts |
-| **comms** | BackOfficeEngagement, BackOfficeSentItems, CommunicationPortal, BackOfficeMediaReleases, BackOfficeAchievements | Communications (campaign drafts, outbox with retry, email templates); public content (releases, achievements, timeline) |
+| **comms** | BackOfficeEngagement, BackOfficeSentItems, CommunicationPortal, BackOfficeMediaReleases, BackOfficeAchievements | Communications (campaign drafts, outbox with retry, email templates); public content (releases, achievements, timeline, **newsletters** and **careers** adverts) |
+| **newsletters** | (new) | The members' library: published issues to read in a new tab or download, with their sections |
 | **account** | Profile, CompleteProfile, NotificationPreferences, NotificationBell | Profile and notification settings; first-time setup; the "to do" tile |
+
+## Newsletters and careers
+
+Staff write and publish them under Back office, Public content (tabs Newsletters and Careers); members read newsletters under
+Investments, Newsletters.
+
+- **Newsletter issue**: title, series, issue number, date, summary, sections (heading plus points), an optional PDF (4 MB cap; a
+  larger file is kept elsewhere and linked as the external link). Publishing asks who may read it: *public* (anyone, on the
+  website), *members* (everyone signed in to the Hub), *internal* (staff only), and the dialog says so before it publishes.
+  Publish and Unpublish are for the back office and the super admin. Nothing is public until someone publishes it.
+- **Job advert**: title, department, type, location, summary, responsibilities, requirements, how to apply, closing date. Only the
+  super admin can publish, through a confirmation that says *"I have checked this advert's wording: it does not describe Citizen
+  Bank as an existing licensed bank."* and sends `confirm_wording: true`. An advert can then be closed.
+- The members' screen opens a PDF in a new tab through an authenticated fetch (the address needs the sign-in token, so a plain
+  link cannot work). If an issue has no file but an external link, the link is shown; with neither, "Not available yet".
+
+## Data-driven: what comes from the backend and what stays in code
+
+`src/platform/policy/` reads `GET /api/policy` once (query key `["policy"]`, fresh for 10 minutes, last good copy kept in the
+browser) and merges it over typed defaults that hold today's values, so every screen renders on first paint and when the endpoint
+is down. Each key is validated; a bad key falls back to its own default.
+
+| Value | Comes from | Used in |
+|---|---|---|
+| Footer wording (licence status) | policy `legal.footer` | the footer of every page (Shell) |
+| Base currency, default country | policy `app.base_currency`, `app.default_country` | `money()` default, the bank-account lookup when paying, blank profile form |
+| Payment plans and labels | `plans` in the policy response | Buy shares (portfolio) |
+| Profile choices: gender, investor type, account type | `lists.gender`, `lists.investor_type`, `lists.account_type` | Profile (account) |
+| Data-room terms and letter-of-intent wording and version | `GET /data-room/agreements/{type}/current` | agreements gate (the version signed is sent) |
+| LOI default currency | policy `app.base_currency` | agreements gate |
+| Board positions in the appoint form | `GET /board-positions` | roster (appoint dialog) |
+
+Stays in code, and why:
+
+- **Roles and `WHO` groups**, and `super_admin` as the safety net: the backend enforces roles by name; moving them is a separate
+  phase (role groups from the backend) and must not be able to lock the administrator out.
+- **Status vocabularies and workflow rules** (subscription, certificate, decision, compliance states and their buttons): the backend
+  enforces them; the Hub only mirrors them. They belong in the backend's `allowed_actions`, not in policy.
+- **Validation limits** (phone pattern, ID length, signature length, board term 1 to 6 years, quantity checks): not in the policy
+  contract yet; kept as constants and listed in the audit for a later `kyc.*` and `board.*` policy.
+- **Footer links, brand name and logo, share classes and Class C restriction, other option lists** (lead sources, crypto coins,
+  jurisdictions, meeting types): the contract does not provide them yet.
+- **The built-in wording** of the terms and the letter of intent, the plans and the profile lists are kept as fallbacks only.
+- `VITE_WEBSITE_URL`: deployment configuration, an environment variable on purpose.
 
 ## Deliberately dropped
 

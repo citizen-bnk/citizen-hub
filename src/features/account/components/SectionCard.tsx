@@ -3,6 +3,7 @@ import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PrimaryButton } from "@/platform/ui/kit";
 import { useAction } from "@/platform/ui/actions";
+import { usePolicy } from "@/platform/policy";
 import { PROFILE_KEY, saveProfile, type Profile } from "@/platform/profile";
 import { fromProfile, validateProfile, type FormValues } from "../logic";
 import { editable, rowsOf, sectionPayload, type FieldKey, type SectionSpec } from "../sections";
@@ -34,7 +35,7 @@ export default function SectionCard({ section, profile, editing, onEdit, onClose
   };
   const cancel = () => { setEdits({}); setErrors({}); save.reset(); onClose(); };
 
-  const rows = rowsOf(section, profile);
+  const rows = rowsOf(section, profile, usePolicy().lists);
   return (
     <section className="rounded-2xl border bg-card p-4 sm:p-5" aria-label={section.title}>
       <div className="mb-3 flex items-center justify-between gap-2">

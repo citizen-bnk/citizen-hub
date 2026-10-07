@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useSession } from "@/platform/auth/session";
 import { money, number } from "@/platform/format";
+import { usePlans } from "@/platform/policy";
 import { useAction } from "@/platform/ui/actions";
 import { PageState } from "@/platform/ui/PageState";
 import { Field, PageHeader, Panel, PrimaryButton } from "@/platform/ui/kit";
@@ -13,7 +14,7 @@ import BuyResult, { type Placed } from "../components/BuyResult";
 import { boardInvest, subscribe, trackInviteClick } from "../api";
 import { useAvailability, useBoardOptions } from "../hooks";
 import { missingCore, useProfile } from "@/platform/profile";
-import { boardPlan, checkQuantity, monthlyAmount, orderTotal, PLANS, type Offer, type Plan } from "../logic";
+import { boardPlan, checkQuantity, defaultPlan, isInstalment, monthlyAmount, orderTotal, type Offer, type Plan } from "../logic";
 
 const STEPS = ["Shares", "Your details", "Payment"];
 
@@ -36,10 +37,11 @@ export default function Buy() {
 }
 
 function Wizard({ offer, isBoard }: { offer: Offer; isBoard: boolean }) {
+  const plans = usePlans();
   const [step, setStep] = useState(0);
   const [cls, setCls] = useState(offer.classes[0].name);
   const [qty, setQty] = useState("");
-  const [plan, setPlan] = useState<Plan>("one-time");
+  const [plan, setPlan] = useState<Plan | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [placed, setPlaced] = useState<Placed | null>(null);
 
@@ -52,6 +54,7 @@ function Wizard({ offer, isBoard }: { offer: Offer; isBoard: boolean }) {
   const missing = missingCore(profile);
   const details = { full_name: profile?.full_name ?? "", email: profile?.email ?? "", phone: profile?.phone ?? "", id_number: profile?.id_number ?? "" };
 
+  const planCode = plan ?? defaultPlan(plans);
   const chosen = offer.classes.find((c) => c.name === cls) ?? offer.classes[0];
   const shares = Number(qty.replace(/[\s,]/g, ""));
   const total = orderTotal(shares, chosen.price_per_share);
@@ -60,13 +63,13 @@ function Wizard({ offer, isBoard }: { offer: Offer; isBoard: boolean }) {
   const buy = useAction(
     async () => {
       if (isBoard) {
-        const r = await boardInvest({ num_shares: shares, share_class: chosen.name, ...boardPlan(plan) });
+        const r = await boardInvest({ num_shares: shares, share_class: chosen.name, ...boardPlan(planCode, plans) });
         return { subscriptionId: r.subscription.subscription_id, shares, total: Number(r.subscription.total_amount) || total };
       }
-      const r = await subscribe({ ...details, num_shares: shares, payment_method: plan === "one-time" ? "one-time" : "installment", installment_plan: plan === "one-time" ? undefined : plan, tracking_token: invite ?? undefined });
+      const r = await subscribe({ ...details, num_shares: shares, payment_method: isInstalment(planCode, plans) ? "installment" : "one-time", installment_plan: isInstalment(planCode, plans) ? planCode : undefined, tracking_token: invite ?? undefined });
       return { subscriptionId: r.subscription_id, shares, total: Number(r.total_amount) || total };
     },
-    { refresh: [["portfolio"]], onDone: (r) => setPlaced({ ...r, monthly: plan === "one-time" ? null : monthlyAmount(r.total, plan) }) },
+    { refresh: [["portfolio"]], onDone: (r) => setPlaced({ ...r, monthly: isInstalment(planCode, plans) ? monthlyAmount(r.total, planCode, plans) : null }) },
   );
 
   if (placed) return <BuyResult placed={placed} />;
@@ -129,12 +132,12 @@ function Wizard({ offer, isBoard }: { offer: Offer; isBoard: boolean }) {
 
       {step === 2 && (
         <Panel title="How will you pay?">
-          <RadioGroup value={plan} onValueChange={(v) => setPlan(v as Plan)} className="gap-2" aria-label="Payment plan">
-            {PLANS.map((p) => (
-              <Label key={p.value} htmlFor={`plan-${p.value}`} className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 font-normal">
-                <RadioGroupItem id={`plan-${p.value}`} value={p.value} />
+          <RadioGroup value={planCode} onValueChange={setPlan} className="gap-2" aria-label="Payment plan">
+            {plans.map((p) => (
+              <Label key={p.code} htmlFor={`plan-${p.code}`} className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 font-normal">
+                <RadioGroupItem id={`plan-${p.code}`} value={p.code} />
                 <span className="flex-1">{p.label}</span>
-                <span className="text-muted-foreground">{money(monthlyAmount(total, p.value))}{p.months > 1 ? " a month" : ""}</span>
+                <span className="text-muted-foreground">{money(monthlyAmount(total, p.code, plans))}{p.months > 1 ? " a month" : ""}</span>
               </Label>
             ))}
           </RadioGroup>

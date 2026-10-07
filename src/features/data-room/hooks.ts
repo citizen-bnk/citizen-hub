@@ -13,16 +13,20 @@ export function useMyAccess() {
 }
 
 export const useNcnda = (enabled: boolean) => useQuery({ queryKey: [KEY, "ncnda"], queryFn: q.currentNcnda, enabled });
+/** The current wording of the terms or the letter of intent. Silent: the screen falls back to the built-in wording. */
+export const useAgreementText = (type: "terms" | "loi", enabled: boolean) =>
+  useQuery({ queryKey: [KEY, "agreement-text", type], queryFn: () => q.currentAgreement(type), enabled, retry: false, meta: { silent: true } });
 export const useInvestorDocuments = (enabled: boolean) => useQuery({ queryKey: [KEY, "documents"], queryFn: q.investorDocuments, enabled });
 
-export type SignRequest = { signature: string; keys: AgreementKey[]; ncndaVersion: string; loi: LoiForm };
+/** `versions`: the version of the wording each agreement showed (NCNDA, terms, loi); "1.0" when none was loaded. */
+export type SignRequest = { signature: string; keys: AgreementKey[]; versions: Partial<Record<AgreementKey, string>>; loi: LoiForm };
 
 /** Signs the chosen agreements one after another; the status is reloaded even when one fails part-way. */
 export function useSign() {
   return useAction(
     async (v: SignRequest) => {
       for (const key of v.keys) {
-        const body = { agreement_version: key === "ncnda" ? v.ncndaVersion : "1.0", digital_signature: v.signature };
+        const body = { agreement_version: v.versions[key] ?? "1.0", digital_signature: v.signature };
         if (key === "ncnda") await q.signNcnda(body);
         else if (key === "terms") await q.signTerms(body);
         else await q.agreeLoi({ ...body, ...v.loi });

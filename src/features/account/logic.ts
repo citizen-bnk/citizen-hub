@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { label } from "@/platform/format";
+import { policy } from "@/platform/policy/current";
 
 /** Pure rules for the profile form, notification settings and the to-do list. */
 
@@ -16,7 +17,8 @@ export type Field = (typeof FIELDS)[number];
 /** Every field of the form as the text the person typed. */
 export type FormValues = Record<Field, string> & { email: string; id_number: string };
 
-export const emptyForm = (): FormValues => ({ ...(Object.fromEntries(FIELDS.map((f) => [f, ""])) as Record<Field, string>), account_type: "personal", country: "Lesotho", nationality: "Lesotho", email: "", id_number: "" });
+/** A blank form; the country (and nationality) start as the policy's default country. */
+export const emptyForm = (country: string = policy("app.default_country")): FormValues => ({ ...(Object.fromEntries(FIELDS.map((f) => [f, ""])) as Record<Field, string>), account_type: "personal", country, nationality: country, email: "", id_number: "" });
 
 /** The form as filled from the stored profile (nulls become empty text). */
 export function fromProfile(p: Partial<Record<string, unknown>> | null | undefined, email = ""): FormValues {
@@ -30,7 +32,7 @@ const text = (max = 120) => z.string().trim().max(max, "That is too long.");
 const base = z.object({
   full_name: z.string().trim().min(2, "Enter your full name.").max(120),
   phone: z.string().trim().regex(/^\+?[0-9 ()-]{7,20}$/, "Enter a valid phone number, for example +266 5800 1234."),
-  account_type: z.enum(["personal", "business"]),
+  account_type: z.string().trim().min(1, "Choose an account type."),
   gender: text(), nationality: text(),
   date_of_birth: z.string().refine((v) => v === "" || (!Number.isNaN(Date.parse(v)) && new Date(v) < new Date()), "Enter a date of birth in the past."),
   street_address: text(200), city: text(), state_province: text(), postal_code: text(20), country: text(),

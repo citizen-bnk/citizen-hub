@@ -35,6 +35,9 @@ for (const d of featureDirs) {
   const fx = path.join(root, "src/features", d, "fixtures.ts");
   if (existsSync(fx)) Object.assign(fixtures, (await import(u(fx).href)).default);
 }
+// Platform-level calls (the policy) have their fixtures next to the platform code.
+const platformFx = path.join(root, "src/platform/fixtures.ts");
+if (existsSync(platformFx)) Object.assign(fixtures, (await import(u(platformFx).href)).default);
 const allow = (roles, wanted) => roles.includes("super_admin") || roles.some((r) => wanted.includes(r));
 const fill = (p, sample = {}) => p.replace(/:([A-Za-z]+)/g, (_m, k) => sample[k] ?? "x");
 

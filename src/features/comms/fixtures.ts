@@ -59,12 +59,21 @@ export default {
   "GET /api/achievements/admin": {
     total: 2,
     achievements: [
-      { id: 1, title: "Banking licence granted", description: "The central bank approved our licence.", achievement_date: "2026-06-15", category: "regulatory", image_url: "achievements/achievement_1_licence.png", display_order: 1, is_published: true, created_at: "2026-06-16T08:00:00Z", updated_at: "2026-06-16T08:00:00Z", created_by: "u1" },
+      { id: 1, title: "Licence application submitted", description: "The application went to the Central Bank of Lesotho.", achievement_date: "2026-06-15", category: "regulatory", image_url: "achievements/achievement_1_licence.png", display_order: 1, is_published: true, created_at: "2026-06-16T08:00:00Z", updated_at: "2026-06-16T08:00:00Z", created_by: "u1" },
       { id: 2, title: "1,000 members", description: "We reached one thousand members.", achievement_date: "2026-09-20", category: "community", image_url: null, display_order: 2, is_published: false, created_at: "2026-09-21T08:00:00Z", updated_at: "2026-09-21T08:00:00Z", created_by: "u1" },
     ],
   },
   "GET /api/progress-timeline/admin/list": [
     { id: 1, title: "Founders' meeting", short_story: "The founding group met to agree the plan.", achievement_date: "2025-03-01", image_url: null, status: "completed", display_order: 1, is_published: true, created_by: "u1", created_at: "2025-03-02T08:00:00Z", updated_at: "2025-03-02T08:00:00Z", comment_count: 2 },
     { id: 2, title: "First branch opens", short_story: "The first branch opens in Maseru.", achievement_date: "2027-01-15", image_url: null, status: "upcoming", display_order: 2, is_published: false, created_by: "u1", created_at: "2026-09-02T08:00:00Z", updated_at: "2026-09-02T08:00:00Z", comment_count: 0 },
+  ],
+  "GET /api/newsletters/admin/list": [
+    { id: 5, slug: "monthly-oct-2026", issue_no: 5, series: "Monthly", title: "Monthly update, October 2026", published_on: "2026-10-01", period_label: "October 2026", summary: "Progress on the licence application.", sections: [{ heading: "Where we are", points: ["Application with the regulator", "Platform in testing"] }], visibility: "members", status: "draft", has_file: false, file_name: null, file_bytes: null, external_url: null },
+    { id: 4, slug: "quarterly-aug-2026", issue_no: 4, series: "Quarterly Review", title: "Quarterly review, August 2026", published_on: "2026-08-15", period_label: "Q2 2026", summary: "A look at the quarter.", sections: [], visibility: "public", status: "published", has_file: true, file_name: "quarterly-review.pdf", file_bytes: 900000, external_url: null },
+    { id: 3, slug: "monthly-jul-2026", issue_no: 3, series: "Monthly", title: "Monthly update, July 2026", published_on: null, period_label: null, summary: "", sections: [], visibility: "internal", status: "draft", has_file: false, file_name: null, file_bytes: null, external_url: "https://drive.example.test/july" },
+  ],
+  "GET /api/careers/admin/list": [
+    { id: 11, slug: "compliance-officer", title: "Compliance Officer", department: "Compliance", employment_type: "Full-time", location: "Maseru", summary: "Support the licence application and future compliance.", responsibilities: ["Maintain the compliance register", "Prepare board compliance reports"], requirements: ["Degree in law or finance", "3 years in compliance"], how_to_apply: "Email your CV and a cover letter.", closing_date: null, status: "draft", wording_confirmed: false, approved_by: null, approved_at: null, source_note: "Wording changed: 'the bank' replaced by 'the proposed Citizen Bank (licence application in progress)'." },
+    { id: 12, slug: "software-engineer", title: "Software Engineer", department: "Technology", employment_type: "Full-time", location: "Maseru", summary: "Build the platform.", responsibilities: ["Build features"], requirements: ["Experience with TypeScript"], how_to_apply: null, closing_date: "2026-12-01", status: "published", wording_confirmed: true, approved_by: "admin@example.com", approved_at: "2026-10-01T08:00:00Z", source_note: null },
   ],
 } as Record<string, unknown>;

@@ -7,7 +7,7 @@ import { useAction } from "@/platform/ui/actions";
 import { Field } from "@/platform/ui/kit";
 import { type AvailableUser, type Member, appoint, linkAccount, updateMember } from "../api";
 import { useAvailableUsers, usePositions } from "../hooks";
-import { APPOINT_POSITIONS, appointSchema, editSchema, fieldErrors } from "../logic";
+import { appointSchema, editSchema, fieldErrors, positionOptions } from "../logic";
 
 const refresh = [["roster"]];
 
@@ -44,19 +44,20 @@ const userOptions = (users: AvailableUser[] | undefined) => (users ?? []).map((u
 /** Appoint a registered person to the board. */
 export function AppointDialog({ onClose }: { onClose: () => void }) {
   const users = useAvailableUsers(true);
+  const positions = positionOptions(usePositions().data);
   const [form, setForm] = useState({ user_id: "", position: "", term_years: "3" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const save = useAction(appoint, { success: "Board member appointed", refresh, onDone: onClose, silent: true });
   const submit = () => {
     const p = appointSchema.safeParse(form);
     setErrors(p.success ? {} : fieldErrors(p.error));
-    if (p.success) save.mutate(p.data as Parameters<typeof appoint>[0]);
+    if (p.success) save.mutate({ ...p.data, position_id: positions.find((o) => o.value === p.data.position)?.id } as Parameters<typeof appoint>[0]);
   };
   const serverError = save.error?.message;
   return (
     <Shell title="Appoint a board member" description="Choose a registered person and the position they will hold." onClose={onClose} onSave={submit} busy={save.isPending}>
       <Choose id="user" label="Person" placeholder="Choose a person" value={form.user_id} onChange={(v) => setForm({ ...form, user_id: v })} options={userOptions(users.data)} error={errors.user_id} />
-      <Choose id="position" label="Position" placeholder="Choose a position" value={form.position} onChange={(v) => setForm({ ...form, position: v })} options={[...APPOINT_POSITIONS]} error={errors.position} />
+      <Choose id="position" label="Position" placeholder="Choose a position" value={form.position} onChange={(v) => setForm({ ...form, position: v })} options={positions} error={errors.position} />
       <Field label="Term (years)" type="number" value={form.term_years} error={errors.term_years} onChange={(e) => setForm({ ...form, term_years: e.target.value })} />
       {serverError && <p role="alert" className="text-sm text-destructive">{serverError}</p>}
     </Shell>

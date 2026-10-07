@@ -1,5 +1,6 @@
 import { date, label } from "@/platform/format";
 import type { Profile } from "@/platform/profile";
+import { DEFAULT_LISTS, type ListItem } from "@/platform/policy/defaults";
 import type { Field as Name, FormValues } from "./logic";
 
 /**
@@ -11,7 +12,10 @@ export type FieldSpec = {
   name: FieldKey;
   label: string;
   kind?: "text" | "date" | "tel" | "url" | "select";
-  options?: [string, string][];
+  /** Name of the option list in the policy (gender, investor_type, account_type); the choices are data, not code. */
+  list?: string;
+  /** For a list that may be left unanswered: what the empty choice says. */
+  blank?: string;
   /** Shown as a fixed value, never edited here, with this reason. */
   fixed?: string;
   wide?: boolean;
@@ -20,16 +24,20 @@ export type FieldSpec = {
 export type SectionId = "identity" | "contact" | "address" | "work" | "investor" | "business";
 export type SectionSpec = { id: SectionId; title: string; blurb: string; fields: FieldSpec[] };
 
-const GENDERS: [string, string][] = [["", "Prefer not to say"], ["male", "Male"], ["female", "Female"], ["other", "Other"]];
-const INVESTOR_TYPES: [string, string][] = [["", "Not specified"], ["individual", "Individual"], ["institutional", "Institution"], ["accredited", "Accredited investor"]];
-const ACCOUNT_TYPES: [string, string][] = [["personal", "Personal"], ["business", "Business"]];
+export type Lists = Record<string, readonly ListItem[]>;
+
+/** The choices of a field: its policy list (the defaults until the backend answers), preceded by the empty choice when allowed. */
+export function optionsFor(f: Pick<FieldSpec, "list" | "blank">, lists: Lists = DEFAULT_LISTS): [string, string][] {
+  const rows = ((f.list && lists[f.list]) || []).map((i): [string, string] => [i.code, i.label]);
+  return f.blank === undefined ? rows : [["", f.blank], ...rows];
+}
 
 export const SECTIONS: SectionSpec[] = [
   { id: "identity", title: "About you", blurb: "Who you are", fields: [
     { name: "full_name", label: "Full name" },
-    { name: "account_type", label: "Account type", kind: "select", options: ACCOUNT_TYPES },
+    { name: "account_type", label: "Account type", kind: "select", list: "account_type" },
     { name: "date_of_birth", label: "Date of birth", kind: "date" },
-    { name: "gender", label: "Gender", kind: "select", options: GENDERS },
+    { name: "gender", label: "Gender", kind: "select", list: "gender", blank: "Prefer not to say" },
     { name: "nationality", label: "Nationality" },
     { name: "id_number", label: "ID or passport number", fixed: "Contact the back office to change this." },
   ] },
@@ -50,7 +58,7 @@ export const SECTIONS: SectionSpec[] = [
     { name: "linkedin_profile", label: "LinkedIn", kind: "url", wide: true, hint: "https://…" },
   ] },
   { id: "investor", title: "Investing", blurb: "For share subscriptions", fields: [
-    { name: "investor_type", label: "Investor type", kind: "select", options: INVESTOR_TYPES },
+    { name: "investor_type", label: "Investor type", kind: "select", list: "investor_type", blank: "Not specified" },
     { name: "source_of_funds", label: "Source of funds" },
     { name: "investment_purpose", label: "Purpose of investing", wide: true },
   ] },
@@ -78,18 +86,18 @@ export function maskId(id: string): string {
 }
 
 /** What a field shows in the read-only view; null when there is nothing to show. */
-export function shown(f: FieldSpec, p: Partial<Profile> | null | undefined): string | null {
+export function shown(f: FieldSpec, p: Partial<Profile> | null | undefined, lists: Lists = DEFAULT_LISTS): string | null {
   const v = str(p, f.name);
   if (!v) return null;
   if (f.name === "id_number") return maskId(v);
   if (f.kind === "date") return date(v);
-  if (f.kind === "select") return f.options?.find(([val]) => val === v)?.[1] ?? label(v);
+  if (f.kind === "select") return optionsFor(f, lists).find(([val]) => val === v)?.[1] ?? label(v);
   return v;
 }
 
 /** The rows of a section that have a value, for the read-only view. */
-export const rowsOf = (s: SectionSpec, p: Partial<Profile> | null | undefined) =>
-  s.fields.map((f) => ({ f, value: shown(f, p) })).filter((r): r is { f: FieldSpec; value: string } => r.value !== null);
+export const rowsOf = (s: SectionSpec, p: Partial<Profile> | null | undefined, lists: Lists = DEFAULT_LISTS) =>
+  s.fields.map((f) => ({ f, value: shown(f, p, lists) })).filter((r): r is { f: FieldSpec; value: string } => r.value !== null);
 
 /** The editable fields of a section (the fixed ones are only ever shown). */
 export const editable = (s: SectionSpec) => s.fields.filter((f) => !f.fixed);
