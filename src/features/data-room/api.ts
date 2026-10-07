@@ -14,7 +14,7 @@ export type Opened = { file_url: string; document_name: string; access_logged: b
 export const checkAccess = () => api.get<Access>("/data-room/investor/check-access");
 export const myStatus = () => api.get<import("./logic").MyStatus>("/data-room/investor/agreements/my-status");
 export const currentNcnda = () => api.get<Ncnda>("/data-room/investor/agreements/ncnda/current");
-export const currentAgreement = (type: string) => api.get<AgreementText>(`/data-room/agreements/${type}/current`);
+export const currentAgreement = (type: string) => api.get<AgreementText>(`/data-room/investor/agreements/${type}/current`);
 export const investorDocuments = () => api.get<InvestorDoc[]>("/data-room/investor/documents");
 export const openDocument = (v: { id: number; reason: string }) =>
   api.post<Opened>(`/data-room/investor/document/${v.id}/access`, { access_reason: v.reason });

@@ -20,7 +20,7 @@ export default {
     version: "1.0", effective_date: "2026-01-01T00:00:00",
     content: "NON-CIRCUMVENTION AND NON-DISCLOSURE AGREEMENT\n\n1. The recipient will keep all data room documents confidential.\n2. The recipient will not approach the bank's partners or regulators about this opportunity without written consent.\n3. This agreement stays in force for five years.",
   },
-  "GET /api/data-room/agreements/:type/current": { version: "2.0", title: "Data room terms", content: "I accept the terms and conditions for using the data room: the documents are confidential, are for my own evaluation of an investment, and every time I open one is recorded." },
+  "GET /api/data-room/investor/agreements/:type/current": { version: "2.0", title: "Data room terms", content: "I accept the terms and conditions for using the data room: the documents are confidential, are for my own evaluation of an investment, and every time I open one is recorded." },
   "GET /api/data-room/investor/documents": investorDocs,
 
   "GET /api/data-room/admin/categories": [
