@@ -144,9 +144,9 @@ const Profile = () => {
       const isBoardMember = rolesData.roles?.includes('board_member');
       
       if (isBoardMember) {
-        const response = await apiClient.get_my_board_profile();
+        const response = await apiClient.get_board_dashboard();
         const data = await response.json();
-        setBoardData(data);
+        setBoardData(data.profile);
       }
     } catch (error) {
       console.error('Failed to fetch board member data:', error);
