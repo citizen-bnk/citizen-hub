@@ -43,6 +43,7 @@ function BoardPortalContent() {
   const { roles, loading: rolesLoading } = useUserRoles();
   const [profile, setProfile] = useState<BoardProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [dashboardError, setDashboardError] = useState<string | null>(null);
   const { formatCurrency } = useCurrency();
   
   // License compliance dialog state
@@ -82,6 +83,8 @@ function BoardPortalContent() {
   useEffect(() => {
     if (!rolesLoading && hasBoardAccess) {
       loadDashboard();
+    } else if (!rolesLoading) {
+      setLoading(false);
     }
   }, [rolesLoading, hasBoardAccess]);
   
@@ -99,34 +102,32 @@ function BoardPortalContent() {
   const loadDashboard = async () => {
     try {
       setLoading(true);
+      setDashboardError(null);
       
       const response = await apiClient.get_board_dashboard();
       const data = await response.json();
       
       // Set all data from single response
-      if (data.profile) {
-        setProfile(data.profile);
-      }
+      setProfile(data.profile ?? null);
       
       if (data.is_chair && data.pending_approvals) {
         setIsChair(true);
         setPendingApprovals(data.pending_approvals);
       } else {
         setIsChair(false);
+        setPendingApprovals([]);
       }
       
       // Store document summary
-      if (data.document_summary) {
-        setDocumentSummary(data.document_summary);
-      }
+      setDocumentSummary(data.document_summary ?? null);
       
       // Store next meeting
-      if (data.next_meeting) {
-        setNextMeeting(data.next_meeting);
-      }
+      setNextMeeting(data.next_meeting ?? null);
       
     } catch (error: any) {
       console.error('Error loading dashboard:', error);
+      setProfile(null);
+      setDashboardError('Your board dashboard could not be loaded. Please try again.');
       showErrorToast(error, 'Failed to load dashboard data');
     } finally {
       setLoading(false);
@@ -137,7 +138,7 @@ function BoardPortalContent() {
   useEffect(() => {
     const checkDocumentUpload = async () => {
       // Only check once when we haven't checked yet
-      if (!documentUploadChecked && !loading) {
+      if (!documentUploadChecked && !loading && profile && hasBoardAccess) {
         setDocumentUploadChecked(true);
         
         try {
@@ -163,7 +164,7 @@ function BoardPortalContent() {
     };
     
     checkDocumentUpload();
-  }, [loading, documentUploadChecked]);
+  }, [loading, documentUploadChecked, profile, hasBoardAccess]);
 
   const handleDocumentUploadComplete = async () => {
     setShowDocumentUpload(false);
@@ -286,6 +287,31 @@ function BoardPortalContent() {
             <Loader2 className="h-8 w-8 animate-spin text-[#6d52a2]" />
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (!profile || !hasBoardAccess) {
+    return (
+      <div className="flex min-h-screen flex-col bg-background">
+        <Header />
+        <main className="page-container container mx-auto flex-1 px-4 py-8 lg:pt-32">
+          <Card className="mx-auto max-w-xl">
+            <CardHeader>
+              <CardTitle>Board Portal</CardTitle>
+              <CardDescription role={dashboardError ? "alert" : "status"}>
+                {dashboardError ?? (hasBoardAccess
+                  ? 'Your board appointment is not available yet. Please contact the back office to confirm your appointment.'
+                  : 'Board access is not available for this account. Choose another workspace from Citizen Hub.')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-3">
+              {hasBoardAccess && <Button onClick={() => void loadDashboard()}>Try again</Button>}
+              <Button variant="outline" onClick={() => navigate('/')}>Citizen Hub home</Button>
+            </CardContent>
+          </Card>
+        </main>
+        <Footer />
       </div>
     );
   }
@@ -505,8 +531,7 @@ function BoardPortalContent() {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-[#6d52a2] mx-auto mb-4" />
-                  <p className="text-muted-foreground dark:text-gray-400">Loading compliance status...</p>
+                  <p role="status" className="text-muted-foreground dark:text-gray-400">Document requirements are currently unavailable. Compliance cannot be assessed until they are available.</p>
                 </div>
               )}
             </div>
