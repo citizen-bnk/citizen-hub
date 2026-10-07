@@ -27,9 +27,9 @@
       "app/*": ["./src/app/*"],
       "utils/*": ["./src/utils/*"],
       "@/*": ["./src/*"],
-      "@/hooks/*": ["./src/extensions/shadcn/hooks/*"],
-      "@/components/hooks/*": ["./src/extensions/shadcn/hooks/*"],
-      "@/components/ui/*": ["./src/extensions/shadcn/components/*"]
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/components/hooks/*": ["./src/hooks/*"],
+      "@/components/ui/*": ["./src/components/ui/*"]
     }
   },
   "include": ["env.d.ts", "src"],
