@@ -30,8 +30,8 @@ const featureDirs = readdirSync(path.join(root, "src/features")).filter((d) => e
 const features = [];
 const fixtures = { "GET /api/platform/demo-accounts": null };
 for (const d of featureDirs) {
-  if (only && d !== only && d !== "home") continue;
-  features.push((await import(u(path.join(root, "src/features", d, "feature.ts")).href)).default);
+  // Fixtures of every feature are always loaded (Home shows every feature's tiles); `--feature` limits which screens are visited.
+  if (!only || d === only || d === "home") features.push((await import(u(path.join(root, "src/features", d, "feature.ts")).href)).default);
   const fx = path.join(root, "src/features", d, "fixtures.ts");
   if (existsSync(fx)) Object.assign(fixtures, (await import(u(fx).href)).default);
 }
