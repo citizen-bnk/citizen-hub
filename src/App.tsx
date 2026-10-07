@@ -20,7 +20,9 @@ export function App() {
       <StackProvider app={stackClientApp}>
         <ThemeProvider defaultTheme="dark">
           <QueryClientProvider client={client}>
-            <RouterProvider router={router} />
+            {/* Lazy feature screens suspend during navigation. React Router's transition mode keeps that
+                suspension out of synchronous input updates (React 18 error 426). */}
+            <RouterProvider router={router} future={{ v7_startTransition: true }} />
             <Toaster richColors closeButton position="top-right" />
           </QueryClientProvider>
         </ThemeProvider>
