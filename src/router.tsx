@@ -2,6 +2,7 @@ import { lazy, type ReactNode, Suspense } from "react";
 import { createBrowserRouter, Outlet } from "react-router-dom";
 import { userRoutes } from "./user-routes.tsx";
 import { AppProvider } from "./components/AppProvider.tsx";
+import PageRecovery from "./hub/PageRecovery";
 
 export const SuspenseWrapper = ({ children }: { children: ReactNode }) => {
   return <Suspense fallback={<main role="status" className="flex min-h-screen items-center justify-center">Loading Citizen Hub…</main>}>{children}</Suspense>;
@@ -22,7 +23,8 @@ export const router = createBrowserRouter(
           </AppProvider>
         </SuspenseWrapper>
       ),
-      children: userRoutes
+      children: userRoutes,
+      errorElement: <PageRecovery />
     },
     {
       path: "*",
