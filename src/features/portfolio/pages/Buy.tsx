@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -11,8 +11,9 @@ import { Field, PageHeader, Panel, PrimaryButton } from "@/platform/ui/kit";
 import { cn } from "@/lib/utils";
 import BuyResult, { type Placed } from "../components/BuyResult";
 import { boardInvest, subscribe, trackInviteClick } from "../api";
-import { useAvailability, useBoardOptions, useMyProfile } from "../hooks";
-import { boardPlan, checkQuantity, detailsSchema, fieldErrors, monthlyAmount, orderTotal, PLANS, type Offer, type Plan } from "../logic";
+import { useAvailability, useBoardOptions } from "../hooks";
+import { missingCore, useProfile } from "@/platform/profile";
+import { boardPlan, checkQuantity, monthlyAmount, orderTotal, PLANS, type Offer, type Plan } from "../logic";
 
 const STEPS = ["Shares", "Your details", "Payment"];
 
@@ -39,7 +40,6 @@ function Wizard({ offer, isBoard }: { offer: Offer; isBoard: boolean }) {
   const [cls, setCls] = useState(offer.classes[0].name);
   const [qty, setQty] = useState("");
   const [plan, setPlan] = useState<Plan>("one-time");
-  const [edits, setEdits] = useState<Partial<Record<"full_name" | "email" | "phone" | "id_number", string>>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [placed, setPlaced] = useState<Placed | null>(null);
 
@@ -47,8 +47,10 @@ function Wizard({ offer, isBoard }: { offer: Offer; isBoard: boolean }) {
   const track = useAction(trackInviteClick, { silent: true });
   useEffect(() => { if (invite) track.mutate(invite); }, [invite]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const profile = useMyProfile().data;
-  const details = { full_name: edits.full_name ?? profile?.full_name ?? "", email: edits.email ?? profile?.email ?? "", phone: edits.phone ?? profile?.phone ?? "", id_number: edits.id_number ?? profile?.id_number ?? "" };
+  // The buyer is the person on the profile: their details are read from it, never typed again here.
+  const profile = useProfile().data;
+  const missing = missingCore(profile);
+  const details = { full_name: profile?.full_name ?? "", email: profile?.email ?? "", phone: profile?.phone ?? "", id_number: profile?.id_number ?? "" };
 
   const chosen = offer.classes.find((c) => c.name === cls) ?? offer.classes[0];
   const shares = Number(qty.replace(/[\s,]/g, ""));
@@ -74,11 +76,10 @@ function Wizard({ offer, isBoard }: { offer: Offer; isBoard: boolean }) {
       const msg = checkQuantity(shares, { min: chosen.min_shares, max: chosen.max_shares, available: offer.available });
       return msg ? setErrors({ qty: msg }) : (setErrors({}), setStep(1));
     }
-    const e = isBoard ? {} : fieldErrors(detailsSchema, details);
-    setErrors(e);
-    if (!Object.keys(e).length) setStep(2);
+    if (!isBoard && missing.length) return setErrors({ profile: "Complete your profile first." });
+    setErrors({});
+    setStep(2);
   };
-  const set = (k: keyof typeof details) => (e: React.ChangeEvent<HTMLInputElement>) => setEdits((p) => ({ ...p, [k]: e.target.value }));
 
   return (
     <div className="space-y-4">
@@ -111,13 +112,18 @@ function Wizard({ offer, isBoard }: { offer: Offer; isBoard: boolean }) {
         </Panel>
       ) : (
         <Panel title="Who is buying?">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Full name" value={details.full_name} onChange={set("full_name")} error={errors.full_name} autoComplete="name" />
-            <Field label="Email" type="email" value={details.email} onChange={set("email")} error={errors.email} autoComplete="email" />
-            <Field label="Phone" type="tel" value={details.phone} onChange={set("phone")} error={errors.phone} autoComplete="tel" />
-            <Field label="ID or passport number" value={details.id_number} onChange={set("id_number")} error={errors.id_number} />
-          </div>
-          <p className="mt-3 text-xs text-muted-foreground">Shares are issued to the person named here.</p>
+          {profile ? (
+            <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+              <div><dt className="text-muted-foreground">Name</dt><dd>{profile.full_name || "—"}</dd></div>
+              <div><dt className="text-muted-foreground">Email</dt><dd>{profile.email || "—"}</dd></div>
+              <div><dt className="text-muted-foreground">Phone</dt><dd>{profile.phone || "—"}</dd></div>
+              <div><dt className="text-muted-foreground">ID or passport number</dt><dd>{profile.id_number || "—"}</dd></div>
+            </dl>
+          ) : <p className="text-sm text-muted-foreground">We could not find your profile.</p>}
+          <p className="mt-3 text-xs text-muted-foreground">Shares are issued to the person on your profile.{" "}
+            <Link to={missing.length || !profile ? "/account/setup" : "/account"} className="underline">{missing.length || !profile ? "Complete your profile" : "Edit your profile"}</Link>
+          </p>
+          {errors.profile && <p role="alert" className="mt-2 text-sm text-destructive">{errors.profile} Missing: {missing.join(", ") || "profile"}.</p>}
         </Panel>
       ))}
 

@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useProfile } from "@/platform/profile";
 import SignatureCanvas from "react-signature-canvas";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,7 +12,9 @@ import { SIGNER_ROLES, validateSign, type Cert } from "../logic";
 /** Draw a signature and embed it in the certificate PDF. */
 export function SignDialog({ cert, onClose }: { cert: Cert; onClose: () => void }) {
   const pad = useRef<SignatureCanvas>(null);
-  const [name, setName] = useState("");
+  const profile = useProfile().data; // the signer is the signed-in person: their name comes from their profile
+  const [typedName, setName] = useState<string | null>(null);
+  const name = typedName ?? profile?.full_name ?? "";
   const [role, setRole] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const sign = useAction(api.sign, { success: "Certificate signed", refresh: [["certificates"]], onDone: onClose });

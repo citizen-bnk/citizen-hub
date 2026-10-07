@@ -13,7 +13,7 @@ export default defineFeature({
       title: "Meeting",
       load: () => import("./pages/Meeting"),
       sample: { meetingId: "m1" },
-      legacy: ["/meeting-details"],
+      legacy: ["/meeting-details", "/board-meetings/:meetingId/rsvp", "/board-meetings/:meetingId"],
       fromLegacy: (q) => (q.get("id") ? `/meetings/${q.get("id")}` : null),
     },
   ],

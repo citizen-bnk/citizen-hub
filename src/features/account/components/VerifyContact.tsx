@@ -11,7 +11,7 @@ export default function VerifyContact({ type, value, verified }: { type: "email"
   const [code, setCode] = useState("");
   const contact = { contact_type: type, contact_value: value } as const;
   const send = useAction(() => sendCode(contact), { success: "Code sent", onDone: () => setSent(true) });
-  const verify = useAction(() => verifyCode({ ...contact, otp_code: code }), { success: type === "email" ? "Email verified" : "Mobile number verified", refresh: [["account"]], onDone: () => setCode("") });
+  const verify = useAction(() => verifyCode({ ...contact, otp_code: code }), { success: type === "email" ? "Email verified" : "Mobile number verified", refresh: [["profile"], ["account"]], onDone: () => setCode("") });
   const name = type === "email" ? "Email" : "Mobile number";
 
   return (

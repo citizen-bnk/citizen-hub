@@ -4,7 +4,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
 import { pathToFileURL } from "node:url";
-import { hubPaths } from "../src/platform/registry";
+import { hubPaths, hubPrefixes } from "../src/platform/registry";
 import type { Feature } from "../src/platform/feature";
 
 const root = path.resolve(import.meta.dirname, "..");
@@ -69,7 +69,7 @@ test("docs/hub-paths.json (what the website redirects) matches the features", as
   const features: Feature[] = [];
   for (const d of featureDirs) features.push(((await import(pathToFileURL(path.join(root, "src/features", d, "feature.ts")).href)) as { default: Feature }).default);
   const onDisk = JSON.parse(readFileSync(path.join(root, "docs/hub-paths.json"), "utf8"));
-  assert.deepEqual(onDisk, hubPaths(features), "run `npm run export:paths`");
+  assert.deepEqual(onDisk, { paths: hubPaths(features), prefixes: hubPrefixes(features) }, "run `npm run export:paths`");
 });
 
 test("no two screens share an address", async () => {

@@ -9,6 +9,7 @@ import { SECTIONS } from "../feature";
 import { features } from "../../features";
 import { type NavSection, landing, navFor } from "../registry";
 import { WEBSITE_URL, websiteUrl } from "../config";
+import { Bell } from "../notifications/Bell";
 import { cn } from "@/lib/utils";
 
 /**
@@ -105,6 +106,7 @@ function TopBar({ onMenu, menuOpen }: { onMenu: () => void; menuOpen: boolean })
         </Link>
         <div className="ml-auto flex items-center gap-1">
           <a href={websiteUrl("/")} className="hidden rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground md:block">Citizen Bank website</a>
+          <Bell />
           <button type="button" onClick={() => setTheme(dark ? "light" : "dark")} className="rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground" aria-label={dark ? "Switch to the light theme" : "Switch to the dark theme"}>
             {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </button>

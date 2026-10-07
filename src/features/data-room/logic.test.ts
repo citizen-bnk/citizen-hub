@@ -55,3 +55,10 @@ test("file helpers", () => {
   assert.equal(nextVersion("1.0"), "1.1");
   assert.equal(nextVersion("v2"), "v2");
 });
+
+test("the letter of intent starts from the profile and never from blanks", async () => {
+  const { loiFromProfile } = await import("./logic");
+  const loi = loiFromProfile({ full_name: "Thabo Mokoena", email: "t@example.com", phone: "+266 5800 1234", business_name: null, investment_purpose: "Growth" });
+  assert.deepEqual([loi.investor_name, loi.contact_email, loi.contact_phone, loi.entity_name, loi.investment_purpose], ["Thabo Mokoena", "t@example.com", "+266 5800 1234", "", "Growth"]);
+  assert.equal(loiFromProfile(null).investor_name, "");
+});

@@ -1,24 +1,20 @@
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSession } from "@/platform/auth/session";
 import { label } from "@/platform/format";
 import { PageState } from "@/platform/ui/PageState";
 import { PageHeader, Panel, Status } from "@/platform/ui/kit";
-import NotificationSettings from "../components/NotificationSettings";
 import ProfileEditor from "../components/ProfileEditor";
 import VerifyContact from "../components/VerifyContact";
-import { useProfile } from "../hooks";
+import { useProfile } from "@/platform/profile";
 
 export default function Account() {
   const session = useSession();
   const q = useProfile();
   return (
     <div className="mx-auto max-w-3xl">
-      <PageHeader title="Profile and settings" description="Your details, how we reach you, and your access." />
-      <Tabs defaultValue="profile">
-        <TabsList className="mb-4"><TabsTrigger value="profile">Profile</TabsTrigger><TabsTrigger value="notifications">Notifications</TabsTrigger></TabsList>
-        <TabsContent value="profile" className="space-y-4">
+      <PageHeader title="Profile" description="Your details and your access. Everything else in the Hub reads them from here." />
+      <div className="space-y-4">
           <PageState query={q}>
             {(p) => (
               <>
@@ -40,9 +36,7 @@ export default function Account() {
               </>
             )}
           </PageState>
-        </TabsContent>
-        <TabsContent value="notifications"><NotificationSettings /></TabsContent>
-      </Tabs>
+      </div>
     </div>
   );
 }

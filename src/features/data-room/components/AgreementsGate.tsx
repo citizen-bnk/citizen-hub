@@ -1,11 +1,12 @@
 import { useState } from "react";
+import { useProfile } from "@/platform/profile";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Field, Panel, PrimaryButton, Status } from "@/platform/ui/kit";
 import { PageState } from "@/platform/ui/PageState";
 import { date } from "@/platform/format";
 import { useNcnda, useSign } from "../hooks";
-import { emptyLoi, signingErrors, unsigned, type AgreementKey, type AgreementRow, type LoiForm } from "../logic";
+import { loiFromProfile, signingErrors, unsigned, type AgreementKey, type AgreementRow, type LoiForm } from "../logic";
 
 const TEXT: Record<Exclude<AgreementKey, "ncnda">, string> = {
   terms: "I accept the terms and conditions for using the data room: the documents are confidential, are for my own evaluation of an investment, and every time I open one is recorded.",
@@ -18,12 +19,17 @@ export default function AgreementsGate({ rows }: { rows: AgreementRow[] }) {
   const ncnda = useNcnda(todo.some((r) => r.key === "ncnda"));
   const sign = useSign();
   const [picked, setPicked] = useState<AgreementKey[]>(todo.map((r) => r.key));
-  const [signature, setSignature] = useState("");
-  const [loi, setLoi] = useState<LoiForm>(emptyLoi);
+  // Name, contact details and investment purpose come from the profile; the person only edits what differs.
+  const profile = useProfile().data;
+  const [typed, setTyped] = useState<string | null>(null);
+  const [loiEdits, setLoiEdits] = useState<Partial<LoiForm>>({});
+  const signature = typed ?? profile?.full_name ?? "";
+  const setSignature = setTyped;
+  const loi: LoiForm = { ...loiFromProfile(profile), ...loiEdits };
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const toggle = (k: AgreementKey, on: boolean) => setPicked((p) => (on ? [...p, k] : p.filter((x) => x !== k)));
-  const set = (k: keyof LoiForm) => (e: React.ChangeEvent<HTMLInputElement>) => setLoi((l) => ({ ...l, [k]: e.target.value }));
+  const set = (k: keyof LoiForm) => (e: React.ChangeEvent<HTMLInputElement>) => setLoiEdits((l) => ({ ...l, [k]: e.target.value }));
 
   const submit = () => {
     const clean = signingErrors(signature, picked, loi);

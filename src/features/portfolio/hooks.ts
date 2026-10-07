@@ -10,4 +10,3 @@ export const useCryptos = () => useQuery({ queryKey: ["portfolio", "cryptos"], q
 export const useWallet = (type: string | null) => useQuery({ queryKey: ["portfolio", "wallet", type], queryFn: () => a.getWallet(type!), enabled: !!type, meta: { silent: true } });
 export const useAvailability = () => useQuery({ queryKey: ["portfolio", "availability"], queryFn: a.getAvailability, select: investorOffer });
 export const useBoardOptions = (enabled: boolean) => useQuery({ queryKey: ["portfolio", "board-options"], queryFn: a.getBoardOptions, enabled, select: (d) => ({ classes: offeredClasses(d.share_classes, true) }), meta: { silent: true } });
-export const useMyProfile = () => useQuery({ queryKey: ["portfolio", "profile"], queryFn: a.getProfile, meta: { silent: true } });

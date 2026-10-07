@@ -1,6 +1,7 @@
 import { useUser } from "@stackframe/react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/http";
+import { useProfile } from "../profile";
 export { allowed } from "./roles";
 
 
@@ -20,6 +21,7 @@ export type Session = {
 /** Who is using the Hub and what they may do. One request, shared by every component that asks. */
 export function useSession(): Session {
   const user = useUser();
+  const profile = useProfile().data;
   const roles = useQuery({
     queryKey: ["session", "roles", user?.id],
     enabled: !!user,
@@ -30,7 +32,7 @@ export function useSession(): Session {
   return {
     signedIn: !!user,
     userId: user?.id ?? null,
-    name: user?.displayName || user?.primaryEmail || "Account",
+    name: profile?.full_name || user?.displayName || user?.primaryEmail || "Account",
     email: user?.primaryEmail ?? null,
     roles: roles.data ?? [],
     loading: !!user && roles.isPending,

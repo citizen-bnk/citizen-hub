@@ -6,7 +6,7 @@ import { useSession } from "@/platform/auth/session";
 import { PageHeader, Panel } from "@/platform/ui/kit";
 import ProfileEditor from "../components/ProfileEditor";
 import VerifyContact from "../components/VerifyContact";
-import { useProfile } from "../hooks";
+import { useProfile } from "@/platform/profile";
 
 /** First-time setup: one short form, then confirm the email and mobile number. */
 export default function Setup() {

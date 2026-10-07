@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { defineFeature } from "../src/platform/feature";
 import { WHO, allowed } from "../src/platform/auth/roles";
-import { allScreens, fillPath, hubPaths, landing, navFor, resolveLegacy, widgetsFor, workspaces } from "../src/platform/registry";
+import { allScreens, fillPath, hubPaths, hubPrefixes, landing, navFor, resolveLegacy, widgetsFor, workspaces } from "../src/platform/registry";
 
 const load = async () => ({ default: () => null as never });
 const features = [
@@ -11,7 +11,7 @@ const features = [
     id: "meetings", section: "board", roles: WHO.boardAndOffice,
     screens: [
       { path: "/meetings", title: "Meetings", load, nav: {}, legacy: ["/board-meetings"] },
-      { path: "/meetings/:meetingId", title: "Meeting", load, legacy: ["/meeting-details"], fromLegacy: (q) => (q.get("id") ? `/meetings/${q.get("id")}` : null) },
+      { path: "/meetings/:meetingId", title: "Meeting", load, legacy: ["/meeting-details", "/board-meetings/:meetingId/rsvp"], fromLegacy: (q) => (q.get("id") ? `/meetings/${q.get("id")}` : null) },
       { path: "/office/meetings/new", title: "New", section: "office", roles: WHO.office, load, nav: { group: "People" } },
     ],
     widgets: [{ id: "next", roles: WHO.board, load, order: 2 }],
@@ -69,4 +69,16 @@ test("Home tiles are limited to the roles that may see them, in order", () => {
 test("path parameters are filled for tests", () => {
   assert.equal(fillPath("/meetings/:meetingId", { meetingId: "m1" }), "/meetings/m1");
   assert.equal(fillPath("/a/:x/b/:y"), "/a/x/b/x");
+});
+
+test("old links keep their query string and hash when they are redirected", () => {
+  assert.equal(resolveLegacy(features, "/board-meetings", "?x=1&y=2", "#a"), "/meetings?x=1&y=2#a");
+  assert.equal(resolveLegacy(features, "/meeting-details", "?id=7&tab=minutes"), "/meetings/7");
+});
+
+test("old addresses with an id in the path fill the new path", () => {
+  assert.equal(resolveLegacy(features, "/board-meetings/42/rsvp"), "/meetings/42");
+  assert.equal(resolveLegacy(features, "/Board-Meetings/42/RSVP/", "?response=yes"), "/meetings/42?response=yes");
+  assert.equal(resolveLegacy(features, "/board-meetings/42/other"), null);
+  assert.deepEqual(hubPrefixes(features), ["/board-meetings/"]);
 });

@@ -13,7 +13,7 @@ import { asApiError } from "../api/errors";
 export function PageState<T>({
   query, children, empty, isEmpty = (d) => Array.isArray(d) && d.length === 0,
 }: {
-  query: Pick<UseQueryResult<T>, "data" | "isPending" | "isError" | "error" | "refetch" | "isFetching">;
+  query: Pick<UseQueryResult<T>, "data" | "isPending" | "isError" | "error" | "isFetching"> & { refetch: () => unknown };
   children: (data: T) => ReactNode;
   /** Shown instead of the children when the data is an empty list (or `isEmpty` says so). */
   empty?: ReactNode;

@@ -47,13 +47,39 @@ export function widgetsFor(features: readonly Feature[], roles: readonly string[
 /** "/Board-Meetings/" and "/boardmeetings" squash to the same key, so every spelling of an old address matches. */
 export const squash = (p: string) => p.toLowerCase().replace(/[^a-z0-9]/g, "");
 
-/** The new address for an old website address (any spelling, with its query), or null when the Hub did not take it over. */
-export function resolveLegacy(features: readonly Feature[], pathname: string, search = ""): string | null {
-  const key = squash(pathname);
+/** Match "/board-meetings/:id/rsvp" against "/board-meetings/7/rsvp" (case and trailing slash ignored): the params, or null. */
+function matchPattern(pattern: string, pathname: string): Record<string, string> | null {
+  const split = (p: string) => p.replace(/\/+$/, "").split("/");
+  const want = split(pattern);
+  const got = split(pathname);
+  if (want.length !== got.length) return null;
+  const params: Record<string, string> = {};
+  for (let i = 0; i < want.length; i++) {
+    if (want[i].startsWith(":")) params[want[i].slice(1)] = got[i];
+    else if (squash(want[i]) !== squash(got[i])) return null;
+  }
+  return params;
+}
+
+/**
+ * The new address for an old website address (any spelling), or null when the Hub did not take it over. The query string and
+ * hash travel with it, so `?invite=...` and `?session=...` in old emails keep working. Old patterns may carry `:params`
+ * ("/board-meetings/:meetingId/rsvp") that fill the new path's params.
+ */
+export function resolveLegacy(features: readonly Feature[], pathname: string, search = "", hash = ""): string | null {
+  const tail = (search.startsWith("?") || !search ? search : `?${search}`) + hash;
   for (const { screen } of allScreens(features)) {
-    if (!screen.legacy?.some((l) => squash(l) === key)) continue;
-    if (!screen.path.includes(":")) return screen.path;
-    return screen.fromLegacy?.(new URLSearchParams(search)) ?? null;
+    for (const legacy of screen.legacy ?? []) {
+      if (legacy.includes(":")) {
+        const params = matchPattern(legacy, pathname);
+        const needed = [...screen.path.matchAll(/:([A-Za-z]+)/g)].map((m) => m[1]);
+        if (params && needed.every((k) => k in params)) return fillPath(screen.path, params) + tail;
+      } else if (squash(legacy) === squash(pathname)) {
+        if (!screen.path.includes(":")) return screen.path + tail;
+        const to = screen.fromLegacy?.(new URLSearchParams(search));
+        return to ? to + (hash || "") : null;
+      }
+    }
   }
   return null;
 }
@@ -64,6 +90,7 @@ export function hubPaths(features: readonly Feature[]): string[] {
   for (const { screen } of allScreens(features)) {
     if (!screen.path.includes(":")) out.add(screen.path);
     for (const l of screen.legacy ?? []) {
+      if (l.includes(":")) continue; // patterns are matched by the Hub itself; the website redirects by prefix
       out.add(l);
       out.add("/" + squash(l));
     }
@@ -74,3 +101,12 @@ export function hubPaths(features: readonly Feature[]): string[] {
 /** Fill the `:params` of a path from `values`. */
 export const fillPath = (path: string, values: Record<string, string> = {}) =>
   path.replace(/:([A-Za-z]+)/g, (_m, k: string) => values[k] ?? "x");
+
+/** Static starts of old addresses with `:params` ("/board-meetings/"): the website redirects anything under them. */
+export function hubPrefixes(features: readonly Feature[]): string[] {
+  const out = new Set<string>();
+  for (const { screen } of allScreens(features)) {
+    for (const l of screen.legacy ?? []) if (l.includes(":")) out.add(l.slice(0, l.indexOf(":")));
+  }
+  return [...out].sort();
+}

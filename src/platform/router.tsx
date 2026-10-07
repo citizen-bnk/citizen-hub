@@ -33,7 +33,7 @@ const screens: RouteObject[] = allScreens(features).map(({ feature, screen }) =>
  */
 function Unknown() {
   const { pathname, search, hash } = useLocation();
-  const moved = resolveLegacy(features, pathname, search);
+  const moved = resolveLegacy(features, pathname, search, hash);
   useEffect(() => {
     if (moved) return;
     const params = new URLSearchParams(search);

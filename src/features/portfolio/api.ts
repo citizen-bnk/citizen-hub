@@ -28,7 +28,6 @@ export type CertificateRequest = { id: number; subscription_id: string; status: 
 export type BankAccount = { account_name: string; bank_name: string; account_number: string; branch_code: string; branch_name: string | null; swift_code: string | null; currency: string; description: string | null };
 export type Availability = { remaining: number; price_per_share: number | string; min_subscription: number; max_subscription: number };
 export type BoardOptions = { share_classes: import("./logic").ShareClass[]; board_member_status: string };
-export type Profile = { full_name: string; email: string; phone: string; id_number: string };
 export type SubscribeResult = { subscription_id: string | null; num_shares: number; total_amount: number | string; payment_method: string; installment_plan: string | null; monthly_payment: number | string | null };
 
 export const getSubscriptions = () => api.get<{ subscriptions: Subscription[] }>("/subscriptions/core/my-public-subscriptions");
@@ -52,8 +51,7 @@ export const downloadWelcome = (id: string) => api.file(`/subscriptions/document
 
 export const getAvailability = () => api.get<Availability>("/subscriptions/core/availability");
 export const getBoardOptions = () => api.get<BoardOptions>("/board/investment-options");
-export const getProfile = () => api.get<Profile>("/users/profile");
-export const subscribe = (body: Profile & { num_shares: number; payment_method: "one-time" | "installment"; installment_plan?: string; tracking_token?: string }) =>
+export const subscribe = (body: { full_name: string; email: string; phone: string; id_number: string } & { num_shares: number; payment_method: "one-time" | "installment"; installment_plan?: string; tracking_token?: string }) =>
   api.post<SubscribeResult>("/subscriptions/core/subscribe", body);
 export const boardInvest = (body: { num_shares: number; share_class: string; payment_method: string; installment_months?: number }) =>
   api.post<{ subscription: { id: number; subscription_id: string | null; num_shares: number; share_class: string; total_amount: number | string } }>("/board/invest", body);

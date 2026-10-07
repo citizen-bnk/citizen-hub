@@ -65,6 +65,16 @@ export const emptyLoi: LoiForm = {
   investment_currency: "LSL", contact_email: "", contact_phone: "", investment_purpose: "",
 };
 
+/** The letter of intent starts from the person's profile, so nothing they already told us is typed again. Still editable. */
+export function loiFromProfile(p: Partial<Record<string, unknown>> | null | undefined): LoiForm {
+  const text = (k: string) => (typeof p?.[k] === "string" ? (p[k] as string) : "");
+  return {
+    ...emptyLoi,
+    investor_name: text("full_name"), contact_email: text("email"), contact_phone: text("phone"),
+    entity_name: text("business_name"), registration_number: text("company_registration_number"), investment_purpose: text("investment_purpose"),
+  };
+}
+
 /** First message per field of a zod failure, or {} when valid. */
 export function fieldErrors(result: z.SafeParseReturnType<unknown, unknown>): Record<string, string> {
   if (result.success) return {};

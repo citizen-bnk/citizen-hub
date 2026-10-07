@@ -2,7 +2,7 @@ import { useState } from "react";
 import { PrimaryButton, Field, Panel } from "@/platform/ui/kit";
 import { Label } from "@/components/ui/label";
 import { useAction } from "@/platform/ui/actions";
-import { registerProfile, saveProfile, type Profile } from "../api";
+import { PROFILE_KEY, registerProfile, saveProfile, type Profile } from "@/platform/profile";
 import { fromProfile, toPayload, validateProfile, type Field as Name, type FormValues } from "../logic";
 
 const CHOICES: Record<string, [string, string][]> = {
@@ -22,7 +22,7 @@ export default function ProfileEditor({ profile, email, short, onSaved }: { prof
   const v: FormValues = { ...fromProfile(profile, email), ...edits };
 
   const save = useAction((values: FormValues) => (register ? registerProfile(toPayload(values, { register: true })) : saveProfile(toPayload(values, { version: profile.version }))), {
-    success: register ? "Profile created" : "Profile saved", silent: true, refresh: [["account"]], onDone: () => { setEdits({}); onSaved?.(); },
+    success: register ? "Profile created" : "Profile saved", silent: true, refresh: [[...PROFILE_KEY], ["account"]], onDone: () => { setEdits({}); onSaved?.(); },
   });
   const problems = { ...save.error?.fields, ...errors };
 
