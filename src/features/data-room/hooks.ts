@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useAction, useDownload } from "@/platform/ui/actions";
 import * as q from "./api";
 import { fileTarget, type AgreementKey, type LoiForm } from "./logic";
@@ -19,21 +19,16 @@ export type SignRequest = { signature: string; keys: AgreementKey[]; ncndaVersio
 
 /** Signs the chosen agreements one after another; the status is reloaded even when one fails part-way. */
 export function useSign() {
-  const qc = useQueryClient();
   return useAction(
     async (v: SignRequest) => {
-      try {
-        for (const key of v.keys) {
-          const body = { agreement_version: key === "ncnda" ? v.ncndaVersion : "1.0", digital_signature: v.signature };
-          if (key === "ncnda") await q.signNcnda(body);
-          else if (key === "terms") await q.signTerms(body);
-          else await q.agreeLoi({ ...body, ...v.loi });
-        }
-      } finally {
-        await qc.invalidateQueries({ queryKey: [KEY] });
+      for (const key of v.keys) {
+        const body = { agreement_version: key === "ncnda" ? v.ncndaVersion : "1.0", digital_signature: v.signature };
+        if (key === "ncnda") await q.signNcnda(body);
+        else if (key === "terms") await q.signTerms(body);
+        else await q.agreeLoi({ ...body, ...v.loi });
       }
     },
-    { success: "Agreements signed" },
+    { success: "Agreements signed", refresh: [[KEY]], refreshOnError: true },
   );
 }
 

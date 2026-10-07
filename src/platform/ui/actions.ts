@@ -12,7 +12,7 @@ import { saveFile } from "../api/http";
  */
 export function useAction<V, R = unknown>(
   run: (variables: V) => Promise<R>,
-  opts: { success?: string; refresh?: QueryKey[]; silent?: boolean; onDone?: (result: R, variables: V) => void } = {},
+  opts: { success?: string; refresh?: QueryKey[]; /** Refresh even when the action fails part-way (a batch where some steps already happened). */ refreshOnError?: boolean; silent?: boolean; onDone?: (result: R, variables: V) => void } = {},
 ) {
   const qc = useQueryClient();
   return useMutation({
@@ -21,6 +21,9 @@ export function useAction<V, R = unknown>(
     onSuccess: async (result, variables) => {
       await Promise.all((opts.refresh ?? []).map((key) => qc.invalidateQueries({ queryKey: key })));
       opts.onDone?.(result, variables);
+    },
+    onError: async () => {
+      if (opts.refreshOnError) await Promise.all((opts.refresh ?? []).map((key) => qc.invalidateQueries({ queryKey: key })));
     },
   });
 }
