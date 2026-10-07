@@ -66,7 +66,7 @@ export default function HubSignIn() {
       <main className="mx-auto w-full max-w-4xl flex-1 space-y-4 px-4 py-10">
         <h1 className="text-3xl font-bold">Sign in to Citizen Hub</h1>
         <a href={websiteUrl("/")} className="inline-block underline">Back to Citizen Bank website</a>
-        {!showAccounts && <StackTheme><AccountSignIn fullPage={false} /></StackTheme>}
+        {!(showAccounts && data?.password) && <StackTheme><AccountSignIn fullPage={false} /></StackTheme>}
         {data?.password && <Button variant="outline" aria-expanded={showAccounts} aria-controls="account-options" onClick={() => setShowAccounts(!showAccounts)} disabled={busy !== null}>{showAccounts ? "Use my Citizen account" : "Try a demonstration account"}</Button>}
         {showAccounts && data?.password && <p className="text-muted-foreground">Choose a fictional account to explore the ecosystem. Banking is simulated and no real money moves.</p>}
         {error && <p role="alert" className="rounded-md border border-destructive/50 p-3 text-sm text-destructive" data-testid="sign-in-error">{error}</p>}
@@ -78,7 +78,7 @@ export default function HubSignIn() {
                 <CardDescription>{a.description}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <p className="text-xs text-muted-foreground">Opens: {workspacesFor(a.roles).map((w) => w.label).join(", ")}</p>
+                <p className="text-xs text-muted-foreground">Opens: {[...workspacesFor(a.roles).map((w) => w.label), ...(a.roles.includes("customer") ? ["Internet banking", "Banking app"] : [])].join(", ")}</p>
                 <Button className="w-full" disabled={busy !== null} onClick={() => signInAs(a)} data-testid={`login-${a.key}`}>
                   <LogIn className="mr-1 h-4 w-4" /> {busy === a.key ? "Signing in…" : `Sign in as ${a.key}`}
                 </Button>
