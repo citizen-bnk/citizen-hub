@@ -43,6 +43,7 @@ function BoardPortalContent() {
   const { roles, loading: rolesLoading } = useUserRoles();
   const [profile, setProfile] = useState<BoardProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [documentServiceAvailable, setDocumentServiceAvailable] = useState(true);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
   const { formatCurrency } = useCurrency();
   
@@ -120,6 +121,7 @@ function BoardPortalContent() {
       
       // Store document summary
       setDocumentSummary(data.document_summary ?? null);
+      setDocumentServiceAvailable((data as typeof data & { document_service_available?: boolean }).document_service_available !== false);
       
       // Store next meeting
       setNextMeeting(data.next_meeting ?? null);
@@ -127,7 +129,14 @@ function BoardPortalContent() {
     } catch (error: any) {
       console.error('Error loading dashboard:', error);
       setProfile(null);
-      setDashboardError('Your board dashboard could not be loaded. Please try again.');
+      const status = error?.status ?? error?.response?.status;
+      setDashboardError(status === 401
+        ? 'Your sign-in session has expired. Return to Citizen Hub to sign in again.'
+        : status === 403
+          ? 'The server denied board access for this account. Return to Citizen Hub and choose an authorized workspace.'
+          : typeof status === 'number'
+            ? `The board dashboard service returned HTTP ${status}. Your board profile could not be retrieved.`
+            : 'The board dashboard service could not be reached. Check your connection and retry.');
       showErrorToast(error, 'Failed to load dashboard data');
     } finally {
       setLoading(false);
@@ -138,7 +147,7 @@ function BoardPortalContent() {
   useEffect(() => {
     const checkDocumentUpload = async () => {
       // Only check once when we haven't checked yet
-      if (!documentUploadChecked && !loading && profile && hasBoardAccess) {
+      if (!documentUploadChecked && !loading && profile && hasBoardAccess && documentServiceAvailable) {
         setDocumentUploadChecked(true);
         
         try {
@@ -306,8 +315,9 @@ function BoardPortalContent() {
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-wrap gap-3">
-              {hasBoardAccess && <Button onClick={() => void loadDashboard()}>Try again</Button>}
-              <Button variant="outline" onClick={() => navigate('/')}>Citizen Hub home</Button>
+              {hasBoardAccess && <Button onClick={() => void loadDashboard()}>Retry</Button>}
+              <Button variant="outline" onClick={() => navigate(-1)}>Go back</Button>
+              <Button variant="ghost" onClick={() => navigate('/')}>Cancel to Citizen Hub</Button>
             </CardContent>
           </Card>
         </main>
@@ -531,7 +541,11 @@ function BoardPortalContent() {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <p role="status" className="text-muted-foreground dark:text-gray-400">Document requirements are currently unavailable. Compliance cannot be assessed until they are available.</p>
+                  <p role="alert" className="text-muted-foreground dark:text-gray-400">The board document database tables are missing or incompatible. Compliance cannot be assessed until the document service is configured.</p>
+                  <div className="mt-4 flex flex-wrap justify-center gap-3">
+                    <Button onClick={() => void loadDashboard()}>Retry</Button>
+                    <Button variant="outline" onClick={() => setShowLicenseDialog(false)}>Cancel</Button>
+                  </div>
                 </div>
               )}
             </div>
