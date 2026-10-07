@@ -1,42 +1,60 @@
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { useSession } from "@/platform/auth/session";
-import { label } from "@/platform/format";
-import { PageState } from "@/platform/ui/PageState";
-import { PageHeader, Panel, Status } from "@/platform/ui/kit";
-import ProfileEditor from "../components/ProfileEditor";
-import VerifyContact from "../components/VerifyContact";
 import { useProfile } from "@/platform/profile";
+import { PageHeader } from "@/platform/ui/kit";
+import { PageState } from "@/platform/ui/PageState";
+import ProfileHero from "../components/ProfileHero";
+import SectionCard from "../components/SectionCard";
+import { missingSections, visibleSections, type SectionId } from "../sections";
 
+/** Your profile, to read. Nothing is editable until you choose Edit on a section. */
 export default function Account() {
   const session = useSession();
   const q = useProfile();
-  return (
-    <div className="mx-auto max-w-3xl">
-      <PageHeader title="Profile" description="Your details and your access. Everything else in the Hub reads them from here." />
-      <div className="space-y-4">
-          <PageState query={q}>
-            {(p) => (
-              <>
-                <Panel title="Your account">
-                  <div className="flex flex-wrap items-center gap-2 text-sm">
-                    <span className="text-muted-foreground">Status</span><Status value={p.status} />
-                    <span className="ml-2 text-muted-foreground">Roles</span>
-                    {session.roles.length ? session.roles.map((r) => <Badge key={r} variant="secondary">{label(r)}</Badge>) : <span>—</span>}
-                  </div>
-                  {p.profile_completion_percentage != null && (
-                    <div className="mt-3"><div className="mb-1 text-xs text-muted-foreground">Profile {p.profile_completion_percentage}% complete</div><Progress value={p.profile_completion_percentage} aria-label="Profile completion" /></div>
-                  )}
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                    <VerifyContact type="email" value={p.email} verified={!!p.email_verified} />
-                    <VerifyContact type="mobile" value={p.phone} verified={!!p.mobile_verified} />
-                  </div>
-                </Panel>
-                <ProfileEditor profile={p} email={p.email} />
-              </>
-            )}
-          </PageState>
+  const [editing, setEditing] = useState<SectionId | null>(null);
+
+  if (q.isError && q.error.kind === "not_found") {
+    return (
+      <div className="mx-auto max-w-3xl">
+        <PageHeader title="Profile" />
+        <div className="rounded-2xl border bg-card p-6 text-sm">
+          <p className="mb-3">You have not set up your profile yet.</p>
+          <Button asChild><Link to="/account/setup">Set up your profile</Link></Button>
+        </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-4xl">
+      <PageHeader title="Profile" />
+      <PageState query={q}>
+        {(p) => {
+          const left = missingSections(p, session.roles);
+          return (
+            <div className="space-y-4">
+              <ProfileHero
+                name={p.full_name} email={p.email} status={p.status} roles={session.roles} percent={p.profile_completion_percentage}
+                next={left.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-muted-foreground">To complete your profile, add:</span>
+                    {left.map((s) => <Button key={s.id} size="sm" variant="outline" onClick={() => setEditing(s.id)}>{s.title}</Button>)}
+                  </div>
+                )}
+              />
+              <div className="grid gap-4 md:grid-cols-2">
+                {visibleSections(p, session.roles).map((s) => (
+                  <div key={s.id} className={editing === s.id || s.id === "address" ? "md:col-span-2" : undefined}>
+                    <SectionCard section={s} profile={p} editing={editing === s.id} onEdit={() => setEditing(s.id)} onClose={() => setEditing(null)} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        }}
+      </PageState>
     </div>
   );
 }

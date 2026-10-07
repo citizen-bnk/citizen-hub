@@ -4,7 +4,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/platform/auth/session";
 import { PageHeader, Panel } from "@/platform/ui/kit";
-import ProfileEditor from "../components/ProfileEditor";
+import SetupForm from "../components/SetupForm";
 import VerifyContact from "../components/VerifyContact";
 import { useProfile } from "@/platform/profile";
 
@@ -24,7 +24,7 @@ export default function Setup() {
       {q.isError && !unregistered && <Panel><p role="alert" className="text-sm">{q.error.message}</p><Button className="mt-3" variant="outline" onClick={() => q.refetch()}>Try again</Button></Panel>}
       {(profile || unregistered) && (
         <div className="space-y-4">
-          <ProfileEditor key={profile?.version ?? "new"} profile={profile} email={session.email ?? ""} short onSaved={() => setSaved(true)} />
+          <SetupForm key={profile?.version ?? "new"} profile={profile} email={session.email ?? ""} onSaved={() => setSaved(true)} />
           {(saved || profile) && profile && (
             <Panel title="Confirm your contact details">
               <p className="mb-3 text-sm text-muted-foreground">We send a 6-digit code to each. This keeps your account safe.</p>
