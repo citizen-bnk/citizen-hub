@@ -4,7 +4,7 @@ import {z} from 'zod';
 import {identityConfiguration} from '@/lib/identity';
 import {query,ServiceIssue} from '@/lib/db';
 import {requireOrigin,failure} from '@/lib/http';
-import {passwordProof,bindingMatches,recoveryOrigin} from '@/lib/password-recovery';
+import {passwordProof,bindingMatches,recoveryOrigin,resetFailure} from '@/lib/password-recovery';
 export const maxDuration=60;
 const schema=z.discriminatedUnion('action',[
  z.object({action:z.literal('send'),email:z.string().trim().email().max(254)}).strict(),
@@ -29,11 +29,13 @@ export async function POST(req:Request){try{
   if(!response.ok)throw new ServiceIssue('RECOVERY_UNAVAILABLE','The identity service could not send a recovery email. Retry, or return to sign-in.');
   return result(sent);
  }
- const record=(await query<{email:string;provider_subject:string|null}>(`SELECT r.email,p.provider_subject FROM hub_recovery_requests r LEFT JOIN hub_people p ON lower(p.email)=r.email AND p.scope='live' AND p.active WHERE r.id=$1 AND r.expires_at>now() AND r.completed_at IS NULL`,[input.request_id]))[0];
- if(!record)throw new ServiceIssue('RECOVERY_LINK_INVALID','This recovery request expired or was completed. Request a new recovery email.',422);
+ const record=(await query<{email:string;provider_subject:string|null;expires_at:string;completed_at:string|null}>(`SELECT r.email,r.expires_at,r.completed_at,p.provider_subject FROM hub_recovery_requests r LEFT JOIN hub_people p ON lower(p.email)=r.email AND p.scope='live' AND p.active WHERE r.id=$1`,[input.request_id]))[0];
+ if(!record)throw new ServiceIssue('RECOVERY_LINK_INVALID','This recovery request was not found. Request a new recovery email.',422);
+ if(record.completed_at)throw new ServiceIssue('RECOVERY_LINK_USED','This recovery request has been completed. Sign in with your new password or request a new link.',422);
+ if(new Date(record.expires_at).getTime()<=Date.now())throw new ServiceIssue('RECOVERY_LINK_EXPIRED','This recovery request has expired. Request a new recovery email.',422);
  const response=await fetch('https://api.stack-auth.com/api/v1/auth/password/reset',{method:'POST',headers,body:JSON.stringify({code:input.code,password:input.password}),cache:'no-store',signal:AbortSignal.timeout(15000)});
  if(!response.ok){
-  if(response.status<500)throw new ServiceIssue('RECOVERY_LINK_INVALID','The recovery link is invalid, expired or already used, or the password was rejected. Choose a stronger password or request a new link.',422);
+  if(response.status<500){const issue=resetFailure(await response.json().catch(()=>null));throw new ServiceIssue(issue.code,issue.message,issue.status);}
   throw new ServiceIssue('RECOVERY_UNAVAILABLE','The identity service could not complete the reset. Retry or request a new recovery link.');
  }
  // The provider's one-use email code authorises the reset. No login or role change follows.
