@@ -1,0 +1,4 @@
+import { AccountForm } from "@/components/AccountForm";
+import { safeReturn } from "@/lib/contracts";
+export const dynamic='force-dynamic';
+export default async function Login({searchParams}:{searchParams:Promise<Record<string,string|undefined>>}){const params=await searchParams;return <main className="access-page" id="main"><div className="access-intro"><div className="brand-orb"/><h2>Your institution.<br/><span>Connected.</span></h2><p>One identity across investments, board responsibilities and banking.</p><small>Citizen Digital Ltd is an applicant for a banking licence. Citizen Bank does not yet carry on banking business.</small></div><AccountForm enabled={process.env.DEMO_MODE==='true'} next={safeReturn(params.next||params.after_auth_return_to)} account={params.demo_account} service={params.service}/></main>;}

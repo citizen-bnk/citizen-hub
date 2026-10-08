@@ -1,8 +1,6 @@
-node_modules
-dist
-.env
-.env.local
-.vercel
-dist-stub
-shots
-dist-stub*
+node_modules/
+.next/
+.env*
+!.env.example
+*.tsbuildinfo
+next-env.d.ts
