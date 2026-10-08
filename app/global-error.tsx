@@ -1,0 +1,2 @@
+"use client";
+export default function GlobalError(){return <html lang="en"><body style={{fontFamily:'system-ui',background:'#08051b',color:'white',padding:'10vh 8vw'}}><main role="alert"><h1>Citizen Hub could not start</h1><p>The application was interrupted before your workspace opened. Retry or return to Citizen Bank.</p><button onClick={()=>window.location.reload()}>Retry</button>{' '}<button onClick={()=>window.history.back()}>Go back</button>{' '}<a style={{color:'#e58bff'}} href={process.env.NEXT_PUBLIC_WEBSITE_URL}>Cancel · Citizen Bank</a></main></body></html>;}

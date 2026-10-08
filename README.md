@@ -1,37 +1,27 @@
 # Citizen Hub
 
-The Citizen Hub frontend for **hub.citizenbank.co.ls**: the entry point for investors, shareholders, the board and the
-back office of Citizen Bank. Part of the [Citizen Bank ecosystem](https://github.com/citizen-bnk/CitizenBankWebsite/blob/claude/practical-volta-tqe0qk/docs/ECOSYSTEM.md).
-
-## Status (version 0.1.0): the entry shell, not yet the full Hub
-
-Built and tested:
-- Sign-in with Stack Auth (the same project as the website, so one account works on both).
-- A signed-in home that asks the website's platform API who you are (`/api/platform/me`) and offers only the
-  workspaces your roles open: My investments, Board portal, Back office, Administration. Role rules come from
-  [`@citizen-bnk/platform`](https://github.com/citizen-bnk/citizen-platform), the same table the website uses.
-- A same-origin `/api` that Vercel forwards to the website, so the browser needs no cross-origin access to the API.
-
-Not built yet: the workspace screens themselves. They still live in
-[CitizenBankWebsite](https://github.com/citizen-bnk/CitizenBankWebsite), and each workspace link here opens them there
-(`VITE_WEBSITE_URL`). Moving a screen means moving its page here and keeping calling the same API. Until the Hub
-and the website share a parent domain, you may be asked to sign in again when you cross over.
+The institutional workspace for Citizen investors, shareholders, board members and management. Built afresh with Next.js 15.5.26, React 19.1.9 and TypeScript, matching the retained banking frontends. There is no Vite, React Router or browser authentication SDK in this implementation.
 
 ## Run
 
-```bash
-npm install
-cp .env.example .env.local     # fill in the two Stack values
-npm run dev                    # http://localhost:5173, /api goes to a local backend on :8000 (DEV_API_TARGET to change)
-npm test && npm run build
-```
+Use Node 22, `npm ci`, copy `.env.example` to `.env.local` and configure the server variables securely. Run `npm run dev` (port 3002). `npm test` checks authentication proof contracts, redirects, document references and role access. `npm run build` validates production compilation and TypeScript.
 
-## Publish on Vercel
+## Data and authentication
 
-1. Import this repository as a Vercel project (framework: Vite; `vercel.json` sets everything else).
-2. Environment variables: `VITE_STACK_PROJECT_ID`, `VITE_STACK_PUBLISHABLE_CLIENT_KEY`, `VITE_WEBSITE_URL`.
-3. In `vercel.json`, the first rewrite sends `/api/*` to `https://citizenbank.co.ls`. For the **demo**, change that
-   address to the demo website's address before deploying.
-4. In Stack Auth, add the Hub's address as a trusted domain. Later, add `hub.citizenbank.co.ls` as the project's domain.
+`CitizenBankCore/db/institutional` owns the versioned institutional schema. Hub uses an isolated `citizen_platform_business` database; banking data remains in the existing Core database. Apply the migrations in order before deployment. Do not point Hub at an uninitialised or legacy website schema.
 
-Until `VITE_STACK_PROJECT_ID` is set, the deployed site says that sign-in is not configured.
+Stack password sign-in is verified by the server. Session secrets stay in HTTP-only cookies; only their hashes are stored. Sessions expire after eight hours and can be revoked. Role checks and owner/scope filters run on the server. Password reset, additional verification flows, account administration and invitations remain to be implemented; existing accounts requiring those flows must not be represented as supported by this release.
+
+`DEMO_MODE=true` exposes the optional account selector in the regular login page and enables fictional accounts. `DEMO_ACCOUNT_PASSWORD` stays server-only. Demonstration records are scoped separately from live institutional records. Turning the flag off blocks new and existing demonstration sessions. `/demo` is a compatibility route to the same login implementation, not a separate application.
+
+The ES256 handoff uses the existing canonical person IDs, signing key and issuer to connect customer identities to the retained banking apps. The website proxies the JWKS, account catalogue and HMAC-authenticated shared profile contract for existing Core consumers. Keep `PLATFORM_ISSUER` unchanged until Core's trust configuration is deliberately migrated. Private signing and profile-service keys must never be exposed as public variables.
+
+## Documents
+
+Document records contain Google Drive file IDs, shared links and permission metadata only. No file bytes are stored in the database. Drive permissions remain authoritative when opening a link. Direct upload, filing, access validation and backups require the authorised Google Drive integration and are shown as Coming soon.
+
+## Availability
+
+Implemented: role-aware launch, executive overview, board agenda/RSVP/voting, investor records, shared profile editing, personal tasks, notifications, and Drive document linking. Licensing, treasury, risk, careers, projects, AI, subscription/payment processing, certificates, committee administration and secure discussions are shown as Coming soon. This release must not be described as completing those business workflows or as ready to accept real money.
+
+Vercel framework: Next.js; build `npm run build`; install `npm ci`; output directory unset. Configure the variables in `.env.example` in the existing Hub project. Deploy the verified Git commit and test canonical URLs after promotion.

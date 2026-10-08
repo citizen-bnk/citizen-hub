@@ -1,0 +1,4 @@
+"use client";
+export function Recovery({title="This screen could not be opened",message="The request was interrupted. Retry, return to the previous page, or cancel to the Citizen Bank website.",code="SCREEN_UNAVAILABLE",retry}:{title?:string;message?:string;code?:string;retry?:()=>void}){
+ return <section className="recovery" role="alert"><span className="status-dot warn"/><h1>{title}</h1><p>{message}</p><small>Issue: {code}</small><div className="button-row"><button className="button primary" onClick={()=>retry?retry():window.location.reload()}>Retry</button><button className="button" onClick={()=>window.history.length>1?window.history.back():window.location.assign("/login")}>Go back</button><a className="button" href={process.env.NEXT_PUBLIC_WEBSITE_URL||"/login"}>Cancel · Citizen Bank</a></div></section>;
+}
