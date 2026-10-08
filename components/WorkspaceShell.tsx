@@ -6,7 +6,7 @@ import { modules,can,type Person } from "@/lib/contracts";
 import { Icon } from "./Icon";
 export function WorkspaceShell({person,active,children}:{person:Person;active:string;children:React.ReactNode}){
  const [open,setOpen]=useState(false),[profile,setProfile]=useState(false),[error,setError]=useState<string|null>(null);
- const visible=modules.filter(module=>module.id!=="profile"&&(module.id==='settings'||can(person.roles,module.roles)));
+ const visible=modules.filter(module=>module.id!=="profile"&&(module.id==='settings'||module.id==='investors'&&person.roles.includes('customer')||can(person.roles,module.roles)));
  const role=person.roles.includes("super_admin")?"Administrator":person.roles.includes("board_member")?"Board member":person.roles.includes("shareholder")?"Shareholder":person.roles.includes("investor")?"Investor":"Citizen account";
  async function logout(){setError(null);try{const response=await fetch("/api/auth/logout",{method:"POST"});const data=await response.json();if(!response.ok)throw new Error(data.error);window.location.assign(data.next);}catch(e){setError(e instanceof Error?e.message:"Sign-out could not be completed. Retry.");}}
  return <div className="workspace">

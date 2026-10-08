@@ -1,11 +1,12 @@
 import "server-only";
 import { neon } from "@neondatabase/serverless";
+import {normaliseDates} from './db-values';
 export async function query<T=Record<string,unknown>>(statement:string,params:unknown[]=[]):Promise<T[]> {
  const url=process.env.DATABASE_URL;
  if(!url)throw new ServiceIssue("DATABASE_UNAVAILABLE","The institutional data service is not configured.");
  const readOnly=/^\s*SELECT\b/i.test(statement);
  for(let attempt=0;attempt<(readOnly?2:1);attempt++){
-  try { return await neon(url,{fetchOptions:{signal:AbortSignal.timeout(6000)}}).query(statement,params) as T[]; }
+  try { return normaliseDates(await neon(url,{fetchOptions:{signal:AbortSignal.timeout(6000)}}).query(statement,params)) as T[]; }
   catch(error) { const issue=error as {code?:string;name?:string;sourceError?:{name?:string;cause?:{code?:string}}};const code=issue.code;
    console.error("[citizen] database request failed", {code:code||"NETWORK",category:issue.name,networkCode:issue.sourceError?.cause?.code});
    if(!code&&readOnly&&attempt===0)continue;
