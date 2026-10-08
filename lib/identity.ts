@@ -1,7 +1,7 @@
 import "server-only";
 import { query,ServiceIssue } from "./db";
 type Identity={id:string;primary_email:string;display_name?:string};
-function configuration(){
+export function identityConfiguration(){
  let provider:Record<string,string>={};
  try {provider=(JSON.parse(process.env.AUTH_PROVIDERS||"[]") as {name:string;config:Record<string,string>}[]).find(p=>p.name==="stack-auth")?.config||{};}catch{ /* Explicit configuration below still applies. */ }
  const id=process.env.STACK_PROJECT_ID||process.env.VITE_STACK_PROJECT_ID||provider.projectId;
@@ -11,7 +11,7 @@ function configuration(){
 }
 export async function authenticate(email:string,password:string):Promise<Identity>{
  try {
-  const headers=configuration();
+  const headers=identityConfiguration();
   const response=await fetch("https://api.stack-auth.com/api/v1/auth/password/sign-in",{method:"POST",headers,body:JSON.stringify({email,password}),cache:"no-store",signal:AbortSignal.timeout(10000)});
   if(!response.ok)throw new ServiceIssue(response.status<500?"SIGN_IN_REJECTED":"IDENTITY_UNAVAILABLE",response.status<500?"Sign-in could not be completed. Check your credentials; accounts requiring additional verification must use their supported sign-in flow.":"The Citizen identity service is unavailable. Please retry.",response.status<500?401:503);
   const tokens=await response.json() as {access_token?:string};
