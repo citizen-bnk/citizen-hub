@@ -3,12 +3,12 @@ import { Navigate, useLocation } from "react-router-dom";
 import { stackClientApp } from "./stack";
 import { localReturn } from "./signin";
 import { websiteUrl } from "../config";
-import DemoSignIn from "./DemoSignIn";
+import AccountAccess from "./AccountAccess";
 
-/** Stack's own sign-in pages, with the demo account picker as the default sign-in screen. */
+/** Shared account access and Stack's normal authentication pages. */
 export function AuthPages() {
   const { pathname, search } = useLocation();
-  if (pathname.endsWith("/sign-in") && new URLSearchParams(search).get("manual") !== "1") return <DemoSignIn />;
+  if (pathname.endsWith("/sign-in") && new URLSearchParams(search).get("manual") !== "1") return <AccountAccess />;
   return (
     <StackTheme>
       <a href={websiteUrl("/")} className="block p-4 underline">Back to Citizen Bank website</a>

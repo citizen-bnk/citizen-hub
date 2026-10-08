@@ -3,13 +3,11 @@ import { Link } from "react-router-dom";
 import { Lock } from "lucide-react";
 import { useSession } from "./session";
 import { allowed } from "./roles";
-import { BOUNCE_PARAM, withParam, withoutParam } from "./signin";
-import { websiteUrl } from "../config";
+import { BOUNCE_PARAM, withoutParam } from "./signin";
 
 /**
- * Everything in the Hub needs a signed-in person. A signed-out visitor is sent to the website's sign-in and brought straight
- * back; if they come back still signed out (no shared session, e.g. both on vercel.app), the Hub's own sign-in is used
- * instead of bouncing for ever.
+ * Protected Hub screens use the Hub's own sign-in and retain the intended destination.
+ * This avoids a website/Hub redirect loop when the hosts cannot share a session cookie.
  */
 export function SignedIn({ children }: { children: ReactNode }) {
   const { signedIn } = useSession();
@@ -20,11 +18,7 @@ export function SignedIn({ children }: { children: ReactNode }) {
       return;
     }
     const here = window.location.href;
-    if (new URL(here).searchParams.has(BOUNCE_PARAM)) {
-      window.location.replace(`/demo?after_auth_return_to=${encodeURIComponent(withoutParam(here, BOUNCE_PARAM))}`);
-    } else {
-      window.location.replace(websiteUrl(`/auth/sign-in?after_auth_return_to=${encodeURIComponent(withParam(here, BOUNCE_PARAM))}`));
-    }
+    window.location.replace(`/login?after_auth_return_to=${encodeURIComponent(withoutParam(here, BOUNCE_PARAM))}`);
   }, [signedIn]);
   if (!signedIn) return <Message title="Taking you to sign in…" />;
   return <>{children}</>;

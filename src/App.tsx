@@ -8,6 +8,7 @@ import { stackClientApp } from "./platform/auth/stack";
 import { createQueryClient, setSignedOutHandler } from "./platform/api/query";
 import { ThemeProvider } from "./platform/ui/ThemeProvider";
 import { router } from "./platform/router";
+import { ApplicationRecovery, SessionBoundary } from "./platform/ui/ApplicationBoundary";
 
 /** The whole app: sign-in, the shared data client (which reports every failure once), theme, toasts and the router. */
 export function App() {
@@ -16,7 +17,8 @@ export function App() {
     return createQueryClient();
   }, []);
   return (
-    <ErrorBoundary fallback={<p role="alert" className="p-10 text-center">Citizen Hub could not start. Please reload the page.</p>}>
+    <ErrorBoundary fallbackRender={({ error }) => <ApplicationRecovery error={error} />}>
+      <SessionBoundary>
       <StackProvider app={stackClientApp}>
         <ThemeProvider defaultTheme="dark">
           <QueryClientProvider client={client}>
@@ -27,6 +29,7 @@ export function App() {
           </QueryClientProvider>
         </ThemeProvider>
       </StackProvider>
+      </SessionBoundary>
     </ErrorBoundary>
   );
 }

@@ -17,15 +17,16 @@ type DemoAccounts = { accounts: DemoAccount[]; password: string | null };
 const opens = (roles: string[]) => workspaces(navFor(features, roles)).map((n) => SECTIONS[n.section].label);
 
 /**
- * The Hub's own sign-in. In the demonstration environment it is a picker of the demo accounts (one click signs in); anywhere
- * else it hands over to Stack's normal form. It is also where a visitor lands when the website's session is not shared.
+ * Normal account access comes first. Environment-enabled demonstration accounts are an optional
+ * part of this same sign-in flow, with the shared backend catalog controlling availability.
  */
-export default function DemoSignIn() {
+export default function AccountAccess() {
   const app = useStackApp();
   const params = new URLSearchParams(window.location.search);
   const next = localReturn(params.get("after_auth_return_to"), window.location.origin);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showAccounts, setShowAccounts] = useState(false);
   const started = useRef(false);
 
   const demo = useQuery({
@@ -73,24 +74,17 @@ export default function DemoSignIn() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
 
-  if (demo.isPending) return <main className="flex min-h-screen items-center justify-center text-muted-foreground"><p>Loading…</p></main>;
-
-  if (!data?.password) {
-    return (
-      <main className="flex min-h-screen flex-col items-center justify-center gap-4">
-        <h1 className="font-display text-2xl font-bold">Citizen Hub sign-in</h1>
-        <Button onClick={manual}>Sign in with your Citizen account</Button>
-        <a href={websiteUrl("/")} className="text-sm underline">Back to Citizen Bank website</a>
-      </main>
-    );
-  }
-
   return (
     <main className="mx-auto w-full max-w-4xl space-y-4 px-4 py-10">
-      <h1 className="font-display text-3xl font-bold">Citizen Hub demonstration</h1>
+      <h1 className="font-display text-3xl font-bold">Welcome to Citizen Hub</h1>
+      <p className="text-muted-foreground">Manage your investments, board responsibilities and Citizen profile in one place.</p>
+      <Button onClick={manual}>Sign in with your Citizen account</Button>
       <a href={websiteUrl("/")} className="inline-block text-sm underline">Back to Citizen Bank website</a>
-      <p className="text-muted-foreground">Pick an account to be signed in at once. Banking is simulated and no real money moves.</p>
       {error && <p role="alert" data-testid="sign-in-error" className="rounded-md border border-destructive/50 p-3 text-sm text-destructive">{error}</p>}
+      {data?.password && <Button variant="outline" onClick={() => setShowAccounts(!showAccounts)} aria-expanded={showAccounts}>{showAccounts ? "Close demonstration accounts" : "Try the demonstration"}</Button>}
+      {data?.password && showAccounts && <>
+      <h2 className="font-display text-xl font-bold">Choose a demonstration account</h2>
+      <p className="text-muted-foreground">Pick an account to sign in. Banking is simulated and no real money moves.</p>
       <div className="grid gap-3 md:grid-cols-2" data-testid="accounts">
         {data.accounts.map((a) => (
           <Card key={a.key} data-testid={`account-${a.key}`}>
@@ -107,7 +101,7 @@ export default function DemoSignIn() {
           </Card>
         ))}
       </div>
-      <Button variant="outline" onClick={manual}>Use another account</Button>
+      </>}
     </main>
   );
 }

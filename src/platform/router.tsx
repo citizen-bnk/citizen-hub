@@ -1,10 +1,11 @@
 import { lazy, type ComponentType, useEffect } from "react";
-import { createBrowserRouter, Navigate, type RouteObject, useLocation } from "react-router-dom";
+import { createBrowserRouter, Navigate, Outlet, type RouteObject, useLocation } from "react-router-dom";
+import { RouteRecovery, SessionBoundary } from "./ui/ApplicationBoundary";
 import { features } from "../features";
 import { allScreens, resolveLegacy, screenRoles } from "./registry";
 import { AfterSignIn, AuthPages } from "./auth/pages";
 import { RoleGate, SignedIn } from "./auth/Gate";
-import DemoSignIn from "./auth/DemoSignIn";
+import AccountAccess from "./auth/AccountAccess";
 import { Shell } from "./ui/Shell";
 import { FROM_HUB_PARAM } from "./auth/signin";
 import { websiteUrl } from "./config";
@@ -45,10 +46,12 @@ function Unknown() {
 }
 
 export const router = createBrowserRouter([
-  { path: "/demo", element: <DemoSignIn /> },
-  { path: "/login", element: <DemoSignIn /> },
+  { element: <SessionBoundary><Outlet /></SessionBoundary>, errorElement: <RouteRecovery />, children: [
+  { path: "/demo", element: <AccountAccess /> },
+  { path: "/login", element: <AccountAccess /> },
   { path: "/auth/redirect", element: <AfterSignIn /> },
   { path: "/auth/*", element: <AuthPages /> },
   { element: <SignedIn><Shell /></SignedIn>, children: screens },
   { path: "*", element: <Unknown /> },
+  ] },
 ]);
