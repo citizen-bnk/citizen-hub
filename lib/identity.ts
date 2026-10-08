@@ -1,6 +1,6 @@
 import "server-only";
 import { query,ServiceIssue } from "./db";
-type Identity={id:string;primary_email:string;display_name?:string};
+type Identity={id:string;primary_email:string;primary_email_verified?:boolean;display_name?:string};
 export function identityConfiguration(){
  let provider:Record<string,string>={};
  try {provider=(JSON.parse(process.env.AUTH_PROVIDERS||"[]") as {name:string;config:Record<string,string>}[]).find(p=>p.name==="stack-auth")?.config||{};}catch{ /* Explicit configuration below still applies. */ }
@@ -28,7 +28,7 @@ export async function personForIdentity(identity:Identity,demonstration:boolean)
  const existing=await query<{id:string}>("SELECT id FROM hub_people WHERE provider_subject=$1 AND scope=$2 AND active",[identity.id,scope]);
  if(existing[0])return existing[0].id;
  if(demonstration)throw new ServiceIssue("ACCOUNT_NOT_SEEDED","This demonstration account has not been provisioned.");
- const created=await query<{id:string}>(`INSERT INTO hub_people(provider_subject,email,display_name,scope) VALUES($1,$2,$3,'live')
- ON CONFLICT(provider_subject,scope) DO UPDATE SET updated_at=now() RETURNING id`,[identity.id,identity.primary_email,identity.display_name||identity.primary_email.split("@")[0]]);
+ if(identity.primary_email_verified!==true)throw new ServiceIssue('EMAIL_VERIFICATION_REQUIRED','Verify your email using the link sent when you registered, then sign in to continue.',403);
+ const created=await query<{id:string}>(`WITH person AS (INSERT INTO hub_people(provider_subject,email,display_name,scope) VALUES($1,$2,$3,'live') ON CONFLICT(provider_subject,scope) DO UPDATE SET updated_at=now() RETURNING id),membership AS (INSERT INTO hub_memberships(person_id,role) SELECT id,'investor' FROM person ON CONFLICT DO NOTHING RETURNING person_id) SELECT id FROM person`,[identity.id,identity.primary_email,identity.display_name||identity.primary_email.split("@")[0]]);
  return created[0].id;
 }

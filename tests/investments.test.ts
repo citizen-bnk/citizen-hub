@@ -1,0 +1,6 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {subscriptionInput,subscriptionAmount} from '../lib/investment-policy';
+const input={request_key:'917a80df-60d9-4f20-a013-67dfd83f8715',opportunity_id:'59bb3f15-0da6-4eea-84d2-3fdf9e66d8ad',version:1,units:1000,source_of_funds:'Personal savings',purpose:'Long term investment',consent:true};
+test('subscription accepts intent only, never a client price or identity',()=>{assert.equal(subscriptionInput.parse(input).units,1000);for(const change of [{unit_price:'0.01'},{person_id:'another-person'},{scope:'live'},{status:'received'},{consent:false},{units:1.5},{units:0}])assert.throws(()=>subscriptionInput.parse({...input,...change}));});
+test('subscription monetary totals use exact integer arithmetic',()=>{assert.equal(subscriptionAmount(1000,'10.00'),'10000.00');assert.equal(subscriptionAmount(3,'0.10'),'0.30');assert.equal(subscriptionAmount(999999,'10.23'),'10229989.77');assert.throws(()=>subscriptionAmount(1.5,'10'));assert.throws(()=>subscriptionAmount(1,'NaN'));});
