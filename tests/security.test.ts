@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash,createHmac} from 'node:crypto';
 import {verifyProfileProof} from '../lib/profile-proof';
-import {driveReference,safeReturn,can} from '../lib/contracts';
+import {driveReference,safeReturn,can,canVote} from '../lib/contracts';
 const secret='fictional-test-secret-with-sufficient-length';
 const id='eec09b1d-7f83-4ea0-ab7b-3bf0d6efb221';
 function token(overrides:Record<string,unknown>={}){const payload=Buffer.from(JSON.stringify({use:'profile',sub:id,method:'PATCH',body:createHash('sha256').update('{}').digest('hex'),iat:1000,exp:1030,...overrides})).toString('base64url');return payload+'.'+createHmac('sha256',secret).update(payload).digest('base64url');}
@@ -10,3 +10,5 @@ test('profile proof binds subject, method, body, expiry and signing secret',()=>
 test('redirects reject external and ambiguous addresses',()=>{for(const value of ['//evil.test','https://evil.test','/\\evil.test','/\nnext'])assert.equal(safeReturn(value),'/');assert.equal(safeReturn('/documents?link=1'),'/documents?link=1');});
 test('documents accept Google file references only',()=>{assert.deepEqual(driveReference('https://drive.google.com/file/d/1234567890abcdef/view?usp=sharing'),{fileId:'1234567890abcdef',url:'https://drive.google.com/file/d/1234567890abcdef/view'});for(const value of ['https://drive.google.com.evil.test/file/d/1234567890abcdef/view','https://drive.google.com/drive/folders/1234567890abcdef','http://drive.google.com/file/d/1234567890abcdef','https://user:secret@drive.google.com/file/d/1234567890abcdef'])assert.throws(()=>driveReference(value));});
 test('customer-only identities cannot access institutional workspaces',()=>{assert.equal(can(['customer'],['board_member','investor']),false);assert.equal(can(['customer','investor'],['investor']),true);assert.equal(can(['super_admin'],['board_member']),true);});
+test('administration rights do not grant a board vote',()=>{assert.equal(canVote(['admin','super_admin']),false);assert.equal(canVote(['investor','shareholder']),false);assert.equal(canVote(['customer','investor','board_member']),true);});
+test('Drive security resource keys survive canonical link creation',()=>{const result=driveReference('https://drive.google.com/file/d/1234567890abcdef/view?usp=sharing&resourcekey=0-secure_reference');assert.equal(new URL(result.url).searchParams.get('resourcekey'),'0-secure_reference');assert.equal(new URL(result.url).searchParams.has('usp'),false);});
