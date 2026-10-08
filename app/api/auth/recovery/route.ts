@@ -23,7 +23,7 @@ export async function POST(req:Request){try{
   const email=input.email.toLowerCase();
   // Fictional identities have no recoverable mailbox. Do not change their shared demo credentials.
   if(email.endsWith('@demo.citizenbank.test'))return result(sent);
-  const base=recoveryOrigin(req.url,process.env.ACCOUNT_RECOVERY_ORIGIN||process.env.PLATFORM_ISSUER);
+  const base=recoveryOrigin(req.url,process.env.ACCOUNT_RECOVERY_ORIGIN||'https://hub.citizenbank.co.ls');
   const row=(await query<{id:string}>("INSERT INTO hub_recovery_requests(email,expires_at) VALUES($1,now()+interval '1 hour') RETURNING id",[email]))[0];
   const response=await fetch('https://api.stack-auth.com/api/v1/auth/password/send-reset-code',{method:'POST',headers,body:JSON.stringify({email,callback_url:base+'/reset-password?request_id='+row.id}),cache:'no-store',signal:AbortSignal.timeout(15000)});
   if(!response.ok)throw new ServiceIssue('RECOVERY_UNAVAILABLE','The identity service could not send a recovery email. Retry, or return to sign-in.');
