@@ -18,6 +18,7 @@ export const modules: {id:ModuleId;label:string;description:string;roles:Role[];
  {id:"profile",label:"Profile",description:"One Citizen identity with role-specific information.",roles:["customer","investor","shareholder","board_member","staff","back_office","admin"]},
 ];
 export const can = (roles: readonly string[],wanted:readonly string[]) => roles.includes("super_admin")||roles.some(role=>wanted.includes(role));
+export const canVote = (roles:readonly string[])=>roles.includes('board_member');
 export function safeReturn(value:string|null|undefined):string { return value && value.startsWith("/")&&!value.startsWith("//")&&!/[\\\u0000-\u001f\u007f]/.test(value)?value:"/"; }
 export function driveReference(raw:string):{url:string;fileId:string} {
  const url=new URL(raw);
@@ -25,7 +26,9 @@ export function driveReference(raw:string):{url:string;fileId:string} {
  const match=url.hostname==="drive.google.com"?url.pathname.match(/^\/file\/d\/([\w-]+)(?:\/|$)/):url.hostname==="docs.google.com"?url.pathname.match(/^\/(?:document|spreadsheets|presentation)\/d\/([\w-]+)(?:\/|$)/):null;
  const id=match?.[1]||(url.hostname==="drive.google.com"&&["/open","/uc"].includes(url.pathname)?url.searchParams.get("id"):null);
  if(!id||!/^[-\w]{10,200}$/.test(id))throw new Error("Use a Google Drive file shared link, not a folder or another website.");
- return {fileId:id,url:url.hostname==="docs.google.com"?`https://docs.google.com${url.pathname.split('/').slice(0,4).join('/')}/edit`:`https://drive.google.com/file/d/${id}/view`};
+ const canonical=new URL(url.hostname==="docs.google.com"?`https://docs.google.com${url.pathname.split('/').slice(0,4).join('/')}/edit`:`https://drive.google.com/file/d/${id}/view`);
+ const resourceKey=url.searchParams.get('resourcekey');if(resourceKey){if(!/^[-\w]{1,200}$/.test(resourceKey))throw new Error('Invalid Drive resource key.');canonical.searchParams.set('resourcekey',resourceKey);}
+ return {fileId:id,url:canonical.href};
 }
 export const accountCatalog = [
  {key:"customer",description:"Banking customer",roles:["customer"]},

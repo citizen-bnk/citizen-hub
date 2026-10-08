@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requirePerson } from "@/lib/session";
 import { ServiceIssue } from "@/lib/db";
-import { can,driveReference } from "@/lib/contracts";
+import { can,canVote,driveReference } from "@/lib/contracts";
 import { requireOrigin,failure } from "@/lib/http";
 import {audited} from '@/lib/audit';
 const inputSchema=z.discriminatedUnion('action',[
@@ -14,7 +14,7 @@ const inputSchema=z.discriminatedUnion('action',[
 ]);
 export async function POST(request:Request){try{requireOrigin(request);const person=await requirePerson();const input=inputSchema.parse(await request.json());
  if(input.action==='vote'){
-  if(!can(person.roles,['board_member']))throw new ServiceIssue('BOARD_ROLE_REQUIRED','Only permitted board members can vote.',403);
+  if(!canVote(person.roles))throw new ServiceIssue('BOARD_ROLE_REQUIRED','Only permitted board members can vote.',403);
   const rows=await audited<{resolution_id:string}>(`INSERT INTO hub_votes(resolution_id,person_id,choice) SELECT id,$2,$3 FROM hub_resolutions WHERE id=$1 AND scope=$4 AND status='open' AND closes_at>now() ON CONFLICT(resolution_id,person_id) DO UPDATE SET choice=EXCLUDED.choice RETURNING resolution_id`,[input.id,person.id,input.choice,person.scope],person,input.action,'resolution','resolution_id');if(!rows.length)throw new ServiceIssue('VOTE_CLOSED','This resolution is unavailable or voting has closed.',409);
  }else if(input.action==='rsvp'){
   if(!can(person.roles,['board_member','staff','back_office']))throw new ServiceIssue('BOARD_ACCESS_REQUIRED','This account cannot respond to board invitations.',403);
