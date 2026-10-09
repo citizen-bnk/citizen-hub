@@ -1,0 +1,12 @@
+import type {Person} from '@/lib/contracts';
+import {subscriptionRecords} from '@/lib/investments';
+import {money} from '@/lib/data';
+import {SubscriptionReview} from './SubscriptionReview';
+import {ServiceIssue} from '@/lib/db';
+import {Recovery} from './Recovery';
+import {statusLabels,nextSubscriptionAction,paidStatus,type SubscriptionStatus} from '@/lib/subscription-lifecycle';
+export async function SubscriptionPortfolio({person,reviewQueue=false,status='all'}:{person:Person;reviewQueue?:boolean;status?:string}){
+ let records;try{records=await subscriptionRecords(person,reviewQueue);}catch(e){if(e instanceof ServiceIssue)return <Recovery code={e.code} message={e.message}/>;throw e;}
+ const visible=records.filter(record=>status==='all'||record.status===status);
+ return <section id="subscriptions"><p>Subscriptions are private. Payment evidence is reviewed before your investment is confirmed; SAFE reference shares remain separate from issued holdings.</p><div className="subscription-summary"><span><strong>{records.length}</strong> subscriptions</span><span><strong>{records.filter(r=>paidStatus(r.status)).length}</strong> payments confirmed</span><span><strong>{records.filter(r=>!["received","pending_conversion","declined","withdrawn"].includes(r.status)).length}</strong> awaiting completion</span></div>{visible.length?<div className="subscription-cards">{visible.map(r=><article className="finding-row" key={r.id}><h3>{r.title}</h3>{reviewQueue&&<p>{r.display_name} · {r.email}</p>}<p>{r.units.toLocaleString()} reference shares · {money(Number(r.unit_price)*r.units,r.currency)}</p><span className="chip">{statusLabels[r.status as SubscriptionStatus]||r.status}</span>{!['received','pending_conversion','declined','withdrawn'].includes(r.status)&&<p className="muted">{r.payment_link?'Payment evidence received — settlement review pending':'Payment evidence outstanding — investment unconfirmed'}</p>}<p>{nextSubscriptionAction(r)}</p><small>Reference CB-{r.id.slice(0,8).toUpperCase()}</small>{r.review_note&&<p>{r.review_note}</p>}<a className="button" href={'/subscriptions/'+r.id}>View subscription and payment</a>{reviewQueue&&<SubscriptionReview id={r.id} version={r.version} status={r.status} agreement={r.agreement_link} payment={r.payment_link} invoice={r.invoice_link} receipt={r.receipt_link} certificate={r.certificate_preview_link}/>}</article>)}</div>:<p className="empty-state">{status==="all"?"No subscriptions yet.":"No subscriptions match this status."} <a href="/opportunities">Subscribe for Shares</a>.</p>}</section>;
+}

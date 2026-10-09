@@ -1,0 +1,3 @@
+import {RegistrationForm} from '@/components/RegistrationForm';
+export const dynamic='force-dynamic';
+export default function Register(){return <main className="access-page" id="main"><div className="access-intro"><div className="brand-orb"/><h2>Become part of<br/><span>Citizen’s future.</span></h2><p>Register once. Review opportunities. Track your subscription.</p><small>Citizen Digital Ltd is an applicant for a banking licence. SAFE subscriptions are conditional investments and do not establish a bank deposit.</small></div><RegistrationForm enabled={process.env.DEMO_MODE==='true'}/></main>;}

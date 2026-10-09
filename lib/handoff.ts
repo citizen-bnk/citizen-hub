@@ -15,6 +15,6 @@ export async function bankingHandoff(person:Person,audience:'banking'|'app'){
  const base=audience==='banking'?process.env.BANKING_URL:process.env.APP_URL;
  if(!pem||!issuer||!base)throw new ServiceIssue('HANDOFF_NOT_CONFIGURED','Citizen service switching is not configured.');
  const kid=(await publicKeys()).keys[0].kid;
- const token=await new SignJWT({use:'handoff',roles:person.roles,name:person.display_name,email:person.email}).setProtectedHeader({alg:'ES256',kid}).setSubject(person.id).setAudience(audience).setIssuer(issuer).setJti(randomUUID().replace(/-/g,'')).setIssuedAt().setNotBefore('0s').setExpirationTime('60s').sign(await importPKCS8(pem,'ES256'));
+ const token=await new SignJWT({use:'handoff',data_scope:person.scope==='demonstration'?'demo':'live',roles:person.roles,name:person.display_name,email:person.email}).setProtectedHeader({alg:'ES256',kid}).setSubject(person.id).setAudience(audience).setIssuer(issuer).setJti(randomUUID().replace(/-/g,'')).setIssuedAt().setNotBefore('0s').setExpirationTime('60s').sign(await importPKCS8(pem,'ES256'));
  const url=new URL('/sso',base);url.searchParams.set('code',token);url.searchParams.set('next','/');return url;
 }
