@@ -11,7 +11,7 @@ async function ensureInvestorCompartment(personId:string,requestId:string,scope:
 }
 export async function POST(req:Request){try{
  requireOrigin(req);const person=await requirePerson();
- if(!can(person.roles,['customer','investor','shareholder','board_member','staff','back_office','admin']))throw new ServiceIssue('INVESTMENT_ACCESS_REQUIRED','Use your own customer or investor account to subscribe.',403);
+ if(!can(person.roles,['candidate','customer','investor','shareholder','board_member','staff','back_office','admin']))throw new ServiceIssue('INVESTMENT_ACCESS_REQUIRED','Use your own customer or investor account to subscribe.',403);
  const input=schema.parse(await req.json());
  const existing=await query<{id:string}>('SELECT id FROM hub_subscription_requests WHERE person_id=$1 AND request_key=$2 AND scope=$3',[person.id,input.request_key,person.scope]);
  if(existing[0]){await ensureInvestorCompartment(person.id,existing[0].id,person.scope);return NextResponse.json({ok:true,id:existing[0].id,replayed:true});}

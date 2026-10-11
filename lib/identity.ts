@@ -23,12 +23,12 @@ export async function authenticate(email:string,password:string):Promise<Identit
   return identity;
  }catch(error){if(error instanceof ServiceIssue)throw error;throw new ServiceIssue("IDENTITY_UNAVAILABLE","The Citizen identity service could not be reached. Please retry.");}
 }
-export async function personForIdentity(identity:Identity,demonstration:boolean){
+export async function personForIdentity(identity:Identity,demonstration:boolean,initialRole:'candidate'|'investor'='investor'){
  const scope=demonstration?"demonstration":"live";
  const existing=await query<{id:string}>("SELECT id FROM hub_people WHERE provider_subject=$1 AND scope=$2 AND active",[identity.id,scope]);
  if(existing[0])return existing[0].id;
  if(demonstration)throw new ServiceIssue("ACCOUNT_NOT_SEEDED","This demonstration account has not been provisioned.");
  if(identity.primary_email_verified!==true)throw new ServiceIssue('EMAIL_VERIFICATION_REQUIRED','Verify your email using the link sent when you registered, then sign in to continue.',403);
- const created=await query<{id:string}>(`WITH person AS (INSERT INTO hub_people(provider_subject,email,display_name,scope) VALUES($1,$2,$3,'live') ON CONFLICT(provider_subject,scope) DO UPDATE SET updated_at=now() RETURNING id),membership AS (INSERT INTO hub_memberships(person_id,role) SELECT id,'investor' FROM person ON CONFLICT DO NOTHING RETURNING person_id) SELECT id FROM person`,[identity.id,identity.primary_email,identity.display_name||identity.primary_email.split("@")[0]]);
+ const created=await query<{id:string}>(`WITH person AS (INSERT INTO hub_people(provider_subject,email,display_name,scope) VALUES($1,$2,$3,'live') ON CONFLICT(provider_subject,scope) DO UPDATE SET updated_at=now() RETURNING id),membership AS (INSERT INTO hub_memberships(person_id,role) SELECT id,$4 FROM person ON CONFLICT DO NOTHING RETURNING person_id) SELECT id FROM person`,[identity.id,identity.primary_email,identity.display_name||identity.primary_email.split("@")[0],initialRole]);
  return created[0].id;
 }

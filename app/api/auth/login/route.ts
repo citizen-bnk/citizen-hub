@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createHash } from "node:crypto";
 import { z } from "zod";
-import { accountCatalog,safeReturn } from "@/lib/contracts";
+import { accountCatalog,safeReturn,registrationRole } from "@/lib/contracts";
 import { authenticate,personForIdentity } from "@/lib/identity";
 import { createSession } from "@/lib/session";
 import { query,ServiceIssue } from "@/lib/db";
@@ -23,7 +23,7 @@ export async function POST(request:Request){try{
  await query("INSERT INTO hub_auth_attempts(bucket) VALUES($1)",[bucket]);
  if(!isDemonstration&&email.endsWith('@demo.citizenbank.test'))throw new ServiceIssue('USE_DEMONSTRATION_SELECTOR','Choose the demonstration account selector for a fictional account.',422);
  const identity=await authenticate(email,password);
- const id=await personForIdentity(identity,isDemonstration);
+ const id=await personForIdentity(identity,isDemonstration,registrationRole(input.next));
  const memberships=await query<{role:string}>('SELECT role FROM hub_memberships WHERE person_id=$1 AND active',[id]);
  await createSession(id);
  return NextResponse.json({ok:true,next:input.service&&memberships.some(item=>item.role==='customer')?`/api/platform/handoff?audience=${input.service}`:safeReturn(input.next)},{headers:{"Cache-Control":"no-store"}});

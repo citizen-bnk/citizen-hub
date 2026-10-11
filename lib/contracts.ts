@@ -1,11 +1,11 @@
-export type Role = "customer"|"investor"|"shareholder"|"board_member"|"staff"|"back_office"|"admin"|"super_admin";
+export type Role = "customer"|"investor"|"shareholder"|"board_member"|"staff"|"back_office"|"admin"|"super_admin"|"candidate";
 export type Scope = "live"|"demonstration";
 export type Person = {id:string;provider_subject:string;email:string;display_name:string;phone:string|null;country:string|null;occupation:string|null;bio:string|null;version:number;scope:Scope;roles:Role[];account_key:string|null;street_address?:string;city?:string;employer?:string;role_profiles?:Record<string,Record<string,string>>};
 export type ModuleId = "executive"|"board"|"investors"|"licensing"|"review"|"documents"|"finance"|"projects"|"people"|"risk"|"communications"|"ai"|"settings"|"profile"|"administration"|"careers"|"recruitment";
 export const modules: {id:ModuleId;label:string;description:string;roles:Role[];comingSoon?:boolean}[] = [
  {id:"administration",label:"Administration",description:"Shareholders, subscribers and corporate record reconciliation.",roles:["admin"]},
- {id:"ai",label:"Citizen AI",description:"Your shared Citizen assistant for investments, careers and workspace guidance.",roles:["customer","investor","shareholder","board_member","staff","back_office","admin"]},
- {id:"careers",label:"Careers",description:"Explore positions and manage your private applications.",roles:["customer","investor","shareholder","board_member","staff","back_office","admin"]},
+ {id:"ai",label:"Citizen AI",description:"Your shared Citizen assistant for investments, careers and workspace guidance.",roles:["candidate","customer","investor","shareholder","board_member","staff","back_office","admin"]},
+ {id:"careers",label:"Careers",description:"Explore positions and manage your private applications.",roles:["candidate","customer","investor","shareholder","board_member","staff","back_office","admin"]},
  {id:"recruitment",label:"Recruitment",description:"Admin vacancy, application and appointment management.",roles:["admin"]},
  {id:"executive",label:"Executive",description:"Your institutional overview, capital progress and priorities.",roles:["staff","back_office","admin","board_member"]},
  {id:"board",label:"Board",description:"Governance. Oversight. Strategic direction.",roles:["board_member","staff","back_office","admin"]},
@@ -17,11 +17,12 @@ export const modules: {id:ModuleId;label:string;description:string;roles:Role[];
  {id:"people",label:"People & Ownership",description:"Recruitment, employee directory and people operations.",roles:["staff","back_office","admin"],comingSoon:true},
  {id:"projects",label:"Projects",description:"Strategy, milestones and institutional delivery.",roles:["board_member","staff","back_office","admin"],comingSoon:true},
  {id:"documents",label:"Documents",description:"Permissioned Google Drive documents and knowledge.",roles:["investor","shareholder","board_member","staff","back_office","admin"]},
- {id:"communications",label:"Communications",description:"Your institutional updates and notifications.",roles:["investor","shareholder","board_member","staff","back_office","admin"]},
- {id:"settings",label:"Settings",description:"Preferences, security and workspace integrations.",roles:["customer","investor","shareholder","board_member","staff","back_office","admin"]},
- {id:"profile",label:"Profile",description:"One Citizen identity with role-specific information.",roles:["customer","investor","shareholder","board_member","staff","back_office","admin"]},
+ {id:"communications",label:"Communications",description:"Your institutional updates and notifications.",roles:["candidate","investor","shareholder","board_member","staff","back_office","admin"]},
+ {id:"settings",label:"Settings",description:"Preferences, security and workspace integrations.",roles:["candidate","customer","investor","shareholder","board_member","staff","back_office","admin"]},
+ {id:"profile",label:"Profile",description:"One Citizen identity with role-specific information.",roles:["candidate","customer","investor","shareholder","board_member","staff","back_office","admin"]},
 ];
 export const can = (roles: readonly string[],wanted:readonly string[]) => roles.includes("super_admin")||roles.some(role=>wanted.includes(role));
+export const registrationRole=(next:string|undefined):'candidate'|'investor'=>/^\/careers(?:[/?#]|$)/.test(safeReturn(next))?'candidate':'investor';
 export const canVote = (roles:readonly string[])=>roles.includes('board_member');
 export function safeReturn(value:string|null|undefined):string { return value && value.startsWith("/")&&!value.startsWith("//")&&!/[\\\u0000-\u001f\u007f]/.test(value)?value:"/"; }
 export function driveReference(raw:string):{url:string;fileId:string} {
