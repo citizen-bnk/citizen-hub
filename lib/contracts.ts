@@ -1,9 +1,10 @@
 export type Role = "customer"|"investor"|"shareholder"|"board_member"|"staff"|"back_office"|"admin"|"super_admin"|"candidate";
 export type Scope = "live"|"demonstration";
 export type Person = {id:string;provider_subject:string;email:string;display_name:string;phone:string|null;country:string|null;occupation:string|null;bio:string|null;version:number;scope:Scope;roles:Role[];account_key:string|null;street_address?:string;city?:string;employer?:string;role_profiles?:Record<string,Record<string,string>>};
-export type ModuleId = "executive"|"board"|"investors"|"licensing"|"review"|"documents"|"finance"|"projects"|"people"|"risk"|"communications"|"ai"|"settings"|"profile"|"administration"|"careers"|"recruitment";
+export type ModuleId = "executive"|"board"|"investors"|"licensing"|"review"|"documents"|"finance"|"projects"|"people"|"risk"|"communications"|"ai"|"settings"|"profile"|"administration"|"careers"|"recruitment"|"appointments";
 export const modules: {id:ModuleId;label:string;description:string;roles:Role[];comingSoon?:boolean}[] = [
  {id:"administration",label:"Administration",description:"Shareholders, subscribers and corporate record reconciliation.",roles:["admin"]},
+ {id:"appointments",label:"Appointments",description:"Corporate nominations, evidence, corrections and independent approval.",roles:["admin"]},
  {id:"ai",label:"Citizen AI",description:"Your shared Citizen assistant for investments, careers and workspace guidance.",roles:["candidate","customer","investor","shareholder","board_member","staff","back_office","admin"]},
  {id:"careers",label:"Careers",description:"Explore positions and manage your private applications.",roles:["candidate","customer","investor","shareholder","board_member","staff","back_office","admin"]},
  {id:"recruitment",label:"Recruitment",description:"Admin vacancy, application and appointment management.",roles:["admin"]},

@@ -1,0 +1,13 @@
+import {redirect} from 'next/navigation';
+import {currentPerson} from '@/lib/session';
+import {can} from '@/lib/contracts';
+import {query,ServiceIssue} from '@/lib/db';
+import {WorkspaceShell} from '@/components/WorkspaceShell';
+import {Hero,Panel,Empty} from '@/components/BoardView';
+import {Recovery} from '@/components/Recovery';
+import {AppointmentForm,type AppointmentRecord} from '@/components/AppointmentForm';
+export const dynamic='force-dynamic';
+export default async function Appointments(){try{const p=await currentPerson();if(!p)redirect('/login?next=/appointments');if(!can(p.roles,['admin']))return <Recovery code="ADMINISTRATION_ACCESS_DENIED" message="Only administrators can maintain corporate appointments. Return to your board workspace."/>;
+ const rows=await query<AppointmentRecord>("SELECT * FROM hub_corporate_records WHERE scope=$1 AND kind='appointment' ORDER BY updated_at DESC",[p.scope]);
+ return <WorkspaceShell person={p} active="appointments"><Hero title="Board & corporate appointments" subtitle="Nominations, evidence and independent review" description="Maintain source-backed appointments as work in progress until documented company and regulatory approval is complete."/><Panel title="New appointment"><details><summary>Nominate or record an appointment</summary><AppointmentForm/></details></Panel><Panel title="Appointment register">{!rows.length&&<Empty>No appointments have been recorded in this environment.</Empty>}{rows.map(r=><article className="finding-row" key={r.id}><h3>{r.title}</h3><span className="chip">{r.status.replaceAll('_',' ')}</span><p>{typeof r.facts.nominee==='string'?r.facts.nominee:typeof r.facts.name==='string'?r.facts.name:'Nominee details require reconciliation'}</p><p>{r.review_note}</p><a href={r.source_link} target="_blank" rel="noopener noreferrer">Source evidence in Google Drive ↗</a><details><summary>Edit / correct appointment</summary><AppointmentForm record={r}/></details>{['work_in_progress','conflict'].includes(r.status)&&r.updated_by&&r.updated_by!==p.id&&<details><summary>Independent approval review</summary><AppointmentForm record={r} confirm/></details>}{r.updated_by===p.id&&<p className="muted">Awaiting review by another administrator.</p>}</article>)}</Panel><Panel title="Recruit candidates"><p>Use the recruitment pipeline to review applications, issue offers, obtain candidate acceptance and complete onboarding.</p><a className="button" href="/recruitment">Open recruitment</a></Panel></WorkspaceShell>;
+ }catch(e){if(e instanceof ServiceIssue)return <Recovery code={e.code} message={e.message}/>;throw e;}}
