@@ -6,6 +6,7 @@ import { authenticate,personForIdentity } from "@/lib/identity";
 import { createSession } from "@/lib/session";
 import { query,ServiceIssue } from "@/lib/db";
 import { requireOrigin,failure } from "@/lib/http";
+import {claimApplications} from '@/lib/applicant-intake';
 export async function POST(request:Request){try{
  requireOrigin(request);
  const input=z.object({email:z.string().email().optional(),password:z.string().min(1).max(1024).optional(),account:z.string().optional(),next:z.string().optional(),service:z.enum(["banking","app"]).optional()}).parse(await request.json());
@@ -24,6 +25,7 @@ export async function POST(request:Request){try{
  if(!isDemonstration&&email.endsWith('@demo.citizenbank.test'))throw new ServiceIssue('USE_DEMONSTRATION_SELECTOR','Choose the demonstration account selector for a fictional account.',422);
  const identity=await authenticate(email,password);
  const id=await personForIdentity(identity,isDemonstration,registrationRole(input.next));
+ if(!isDemonstration&&identity.primary_email_verified===true)await claimApplications(id,identity.primary_email);
  const memberships=await query<{role:string}>('SELECT role FROM hub_memberships WHERE person_id=$1 AND active',[id]);
  await createSession(id);
  return NextResponse.json({ok:true,next:input.service&&memberships.some(item=>item.role==='customer')?`/api/platform/handoff?audience=${input.service}`:safeReturn(input.next)},{headers:{"Cache-Control":"no-store"}});

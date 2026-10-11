@@ -3,11 +3,14 @@ import {requirePerson} from '@/lib/session';
 import {requireOrigin,failure} from '@/lib/http';
 import {query,ServiceIssue} from '@/lib/db';
 import {audited} from '@/lib/audit';
-import {apply,progress,candidateAction,recruiter} from '@/lib/recruitment';
+import {progress,candidateAction,recruiter} from '@/lib/recruitment';
 import {vacancyInput,documentUpdate} from '@/lib/recruitment-policy';
 export async function POST(request:Request){try{
  requireOrigin(request);const person=await requirePerson(),raw=await request.text();if(raw.length>25000)throw new ServiceIssue('VALIDATION_FAILED','This application is too large.',422);const input=JSON.parse(raw);
- if(input.action==='apply')return Response.json(await apply(person,input));
+ if(input.action==='identity_documents'){
+ const d=z.object({action:z.literal('identity_documents'),id:z.string().uuid(),version:z.number().int().positive(),purpose:z.enum(['selfie','id_photo']),url:z.string().max(500)}).strict().parse(input);
+ const files=await query('SELECT id FROM hub_documents WHERE owner_id=$1 AND scope=$2 AND category=$3 AND shared_link=$4',[person.id,person.scope,'recruitment_'+d.purpose,d.url]);if(!files.length)throw new ServiceIssue('DOCUMENT_OWNERSHIP_REQUIRED','Upload your own identity photo before saving.',422);
+ const rows=await audited(`UPDATE hub_job_applications SET applicant_details=jsonb_set(applicant_details,ARRAY[$4],to_jsonb($5::text)),version=version+1,updated_at=now() WHERE id=$1 AND scope=$2 AND person_id=$3 AND version=$6 AND status IN('submitted','under_review','shortlisted','interview','checks') RETURNING id`,[d.id,person.scope,person.id,d.purpose+'_link',d.url,d.version],person,'recruitment.identity_evidence_updated','application');if(!rows[0])throw new ServiceIssue('APPLICATION_CHANGED','Reload your application before changing identity evidence. Evidence updates close once an offer is issued.',409);return Response.json({ok:true});}
  if(input.action==='review')return Response.json(await progress(person,input));
  if(input.action==='documents'){const d=documentUpdate.parse(input);const rows=await audited(`UPDATE hub_job_applications SET cv_link=$4,references_link=$5,version=version+1,updated_at=now() WHERE id=$1 AND scope=$2 AND person_id=$3 AND version=$6 AND status IN('submitted','under_review','shortlisted','interview','checks') RETURNING id`,[d.id,person.scope,person.id,d.cv_link,d.references_link||null,d.version],person,'recruitment.documents_updated','application');if(!rows[0])throw new ServiceIssue('APPLICATION_CHANGED','Documents can only be updated on your own application before an offer. Reload before retrying.',409);return Response.json({ok:true});}
  if(input.action==='candidate'){const d=z.object({action:z.literal('candidate'),id:z.string().uuid(),version:z.number().int().positive(),status:z.enum(['accepted','declined','withdrawn']),confirmed:z.literal(true)}).strict().parse(input);return Response.json(await candidateAction(person,d.id,d.version,d.status));}

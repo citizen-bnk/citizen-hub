@@ -1,6 +1,6 @@
 # Private recruitment uploads
 
-The Hub accepts applicant PDF uploads (maximum 3 MB), sends the bytes to Google Drive and stores only the resulting Drive file ID/link and document metadata. No document bytes are stored in Postgres. CV and references are uploaded inside the one-question application journey; existing application links remain valid.
+The Hub accepts applicant PDF CV/reference files and JPEG/PNG identity photos (maximum 3 MB each), sends bytes to Google Drive and stores only file IDs/links and metadata. No document bytes are stored in Postgres. Guests use an expiring HttpOnly application capability, not a Citizen session; uploaded metadata belongs to that draft until verified account access is established. Photos are not sent to CitizenAI or used for automated facial matching.
 
 Configure these server-only Vercel environment variables in the Hub project:
 
@@ -12,7 +12,7 @@ Use Google's documented OAuth consent and offline access process. For the least-
 
 The server checks the parent is a writable folder and refuses folders with public (`anyone`) or domain-wide permissions. It never changes sharing permissions to make applicant files public. Review any group permissions manually to ensure group membership is restricted to recruitment personnel. Applicant download/review access through Drive requires their appropriate Google identity; uploading and submission do not require the applicant to have a Drive account.
 
-Unconfigured or expired connections show a specific recovery message; no file or application is falsely reported as saved. Pending uploads remain in Drive if the applicant abandons a form, or the metadata write fails after Drive saves the file. Administrators should reconcile such unsubmitted documents against their retention policy; there is no automatic permanent deletion.
+Unconfigured or expired connections show a specific recovery message; no file is falsely reported as saved. Structured answers can be submitted with missing evidence clearly pending. Offers on new applications require verified contact, a CV, selfie and ID photo. Pending files remain in Drive if the applicant abandons a form, or the metadata write fails after Drive saves the file. Administrators must establish retention, restricted reviewer access and correction/withdrawal handling before collecting real identity evidence; there is no automatic permanent deletion.
 
 End-to-end upload verification requires an authorised connection and both folders. Unit checks verify the size/type/magic-byte policy, and production checks verify session protection and the unconfigured-state response. A successful real Drive upload is not claimed until that connection is supplied and tested.
 

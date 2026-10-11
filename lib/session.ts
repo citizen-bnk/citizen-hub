@@ -16,6 +16,7 @@ export const currentPerson=cache(async():Promise<Person|null>=>{
  return person;
 });
 export async function requirePerson(){const person=await currentPerson();if(!person)throw new ServiceIssue("SIGN_IN_REQUIRED","Your session has ended. Sign in again to continue.",401);return person;}
+export async function requireRecentPerson(){const person=await requirePerson(),token=(await cookies()).get(name)?.value;const rows=await query('SELECT person_id FROM hub_sessions WHERE token_hash=$1 AND person_id=$2 AND created_at>now()-interval \'5 minutes\' AND revoked_at IS NULL AND expires_at>now()',[digest(token||''),person.id]);if(!rows.length)throw new ServiceIssue('SIGN_IN_REQUIRED','Sign in again before confirming card recovery. Administrator verification must be recent.',401);return person;}
 export async function createSession(personId:string){
  const token=randomBytes(32).toString("base64url");
  await query("INSERT INTO hub_sessions(token_hash,person_id,expires_at) VALUES($1,$2,now()+interval '8 hours')",[digest(token),personId]);
