@@ -3,7 +3,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {PDFDocument} from 'pdf-lib';
 import {corporateInput,milestoneInput,projectInput} from '../lib/corporate-policy';
-import {certificateEligible,canAuthorise,signingRequestInput} from '../lib/document-policy';
+import {certificateEligible,canAuthorise,signingRequestInput,demonstrationFile} from '../lib/document-policy';
 import {certificatePDF,certificateLayout,appendSignatures} from '../lib/document-pdf';
 const id='11111111-1111-4111-8111-111111111111',link='https://drive.google.com/file/d/abcdefghijklmnop/view';
 test('corporate edits cannot self-confirm or grant system roles',()=>{const valid={action:'save',kind:'holding',name:'Fictional holder',email:'',phone:'',relationship:'',quantity:1000,instrument:'Ordinary Class B',person_id:'',status:'work_in_progress',source_link:link,source_date:'',review_note:'Fictional reconciliation.'};assert.ok(corporateInput.safeParse(valid).success);for(const patch of [{status:'confirmed'},{quantity:-1},{quantity:1.5},{roles:['super_admin']},{source_link:'https://outside.example/doc'}])assert.equal(corporateInput.safeParse({...valid,...patch}).success,false);});
@@ -19,3 +19,5 @@ test('payment proof alone cannot unlock signing; settlement and deferral require
  assert.equal(paymentAuthorisation.safeParse({basis:'deferred',motivation:'too short',due_date:'2026-11-12',confirmed:true}).success,false);
  assert.equal(signingPaymentReady({...row,payment_authorisation_basis:'deferred',payment_authorised_by:id,payment_authorised_at:'2026-10-12',deferred_payment_motivation:'Approved fictional payment deferral.',deferred_payment_due:'2026-11-12'}),true);
 });
+
+test('demo signing and sharing cannot use live Drive files or files outside the dedicated folder',()=>{const info={parents:['demo-folder'],appProperties:{citizen_scope:'demonstration'}};assert.ok(demonstrationFile(info,'demo-folder'));assert.equal(demonstrationFile(info,'live-folder'),false);assert.equal(demonstrationFile({...info,appProperties:{citizen_scope:'live'}},'demo-folder'),false);assert.equal(demonstrationFile({parents:['demo-folder']},'demo-folder'),false);});
