@@ -52,3 +52,9 @@ Roles are additive. A person who is both a customer and investor receives both p
 ## Beta release limits
 
 Public UI and completed self-service/administrative controls can be tested. This access release does not certify licensing, confirm investment holdings, enable real-money banking, activate an AI provider or complete the coming-soon regulator finding/finance/risk workflows. These remain explicit beta release prerequisites, not silently accessible placeholder functions.
+
+## Linked-session revocation follow-up
+
+Core checks the authenticated, scope-bound Citizen identity for linked banking sessions on every request. Removing the canonical customer role denies financial APIs even for an already-open banking session. Password/login-email changes record a non-secret revocation timestamp; older linked banking sessions are removed on their next request. Existing passkeys remain independent credentials and are not deleted by a password change. Unlinked Core-only identities still require reconciliation.
+
+Authority-service failure returns a recoverable 503 and allows no banking action. Institutional privileges are not copied into banking permissions. A new signed handoff refreshes the canonical email on the existing person-linked banking profile; an email collision fails without adopting another person's account.
