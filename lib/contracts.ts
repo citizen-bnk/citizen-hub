@@ -16,7 +16,7 @@ export const modules: {id:ModuleId;label:string;description:string;roles:Role[];
  {id:"finance",label:"Finance",description:"Budgets, treasury and controlled financial approvals.",roles:["staff","back_office","admin"],comingSoon:true},
  {id:"risk",label:"Risk & Compliance",description:"Risk registers, policy controls and incident escalation.",roles:["board_member","staff","back_office","admin"],comingSoon:true},
  {id:"people",label:"People & Ownership",description:"Recruitment, employee directory and people operations.",roles:["staff","back_office","admin"],comingSoon:true},
- {id:"projects",label:"Projects",description:"Strategy, milestones and institutional delivery.",roles:["board_member","staff","back_office","admin"],comingSoon:true},
+ {id:"projects",label:"Projects",description:"Strategy, milestones and institutional delivery.",roles:["investor","shareholder","board_member","staff","back_office","admin"]},
  {id:"documents",label:"Documents",description:"Permissioned Google Drive documents and knowledge.",roles:["investor","shareholder","board_member","staff","back_office","admin"]},
  {id:"communications",label:"Communications",description:"Your institutional updates and notifications.",roles:["candidate","investor","shareholder","board_member","staff","back_office","admin"]},
  {id:"settings",label:"Settings",description:"Preferences, security and workspace integrations.",roles:["candidate","customer","investor","shareholder","board_member","staff","back_office","admin"]},

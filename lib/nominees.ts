@@ -1,0 +1,8 @@
+import 'server-only';
+import {query} from './db';
+import type {Scope} from './contracts';
+export type NomineeOption={source:string;name:string;email:string;person_id:string|null;category:string};
+export async function nomineeCandidates(scope:Scope){
+ const rows=await query<NomineeOption>(`SELECT 'person:'||p.id AS source,p.display_name AS name,p.email,p.id AS person_id,'Registered investor / applicant' AS category FROM hub_people p WHERE p.scope=$1 AND p.active AND EXISTS(SELECT 1 FROM hub_memberships m WHERE m.person_id=p.id AND m.active AND m.role IN('investor','shareholder','candidate')) UNION ALL SELECT 'corporate:'||r.id,COALESCE(r.facts->>'holder',r.facts->>'name',r.title),COALESCE(r.facts->>'email',''),r.person_id,'Corporate investor / shareholder' FROM hub_corporate_records r WHERE r.scope=$1 AND r.kind IN('holding','stakeholder') AND r.status<>'archived' AND r.person_id IS NULL UNION ALL SELECT 'application:'||a.id,a.applicant_details->>'name',COALESCE(a.applicant_details->>'email',''),a.person_id,'Applicant' FROM hub_job_applications a WHERE a.scope=$1 AND a.person_id IS NULL AND a.status NOT IN('withdrawn','rejected','declined') UNION ALL SELECT 'form:'||f.id,f.facts->>'name',COALESCE(f.facts->>'email',''),f.person_id,'Google Form subscriber' FROM hub_form_submissions f WHERE f.scope=$1 AND f.person_id IS NULL AND f.corporate_record_id IS NULL ORDER BY name`,[scope]);
+ return rows.filter(r=>r.name);
+}
