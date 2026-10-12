@@ -1,26 +1,28 @@
-export type Role = "customer"|"investor"|"shareholder"|"board_member"|"staff"|"back_office"|"admin"|"super_admin"|"candidate";
+export type Role = "customer"|"investor"|"shareholder"|"board_member"|"staff"|"back_office"|"admin"|"super_admin"|"candidate"|"regulatory_reviewer";
 export type Scope = "live"|"demonstration";
 export type Person = {id:string;provider_subject:string;email:string;display_name:string;phone:string|null;country:string|null;occupation:string|null;bio:string|null;version:number;scope:Scope;roles:Role[];account_key:string|null;street_address?:string;city?:string;employer?:string;role_profiles?:Record<string,Record<string,string>>};
-export type ModuleId = "executive"|"board"|"investors"|"licensing"|"review"|"documents"|"finance"|"projects"|"people"|"risk"|"communications"|"ai"|"settings"|"profile"|"administration"|"careers"|"recruitment"|"appointments";
-export const modules: {id:ModuleId;label:string;description:string;roles:Role[];comingSoon?:boolean}[] = [
+export type ModuleId = "executive"|"board"|"investors"|"licensing"|"review"|"documents"|"finance"|"projects"|"people"|"risk"|"communications"|"ai"|"settings"|"profile"|"administration"|"careers"|"recruitment"|"appointments"|"opportunities"|"users";
+export const modules: {id:ModuleId;label:string;description:string;roles:Role[];comingSoon?:boolean;path?:string}[] = [
+ {id:"opportunities",label:"Invest opportunities",description:"Published investment offers and terms.",roles:["candidate","customer","investor","shareholder","board_member","staff","back_office","admin","regulatory_reviewer"]},
+ {id:"users",label:"User access",description:"Profile, role and credential administration.",roles:["admin"]},
  {id:"administration",label:"Administration",description:"Shareholders, subscribers and corporate record reconciliation.",roles:["admin"]},
  {id:"appointments",label:"Appointments",description:"Corporate nominations, evidence, corrections and independent approval.",roles:["admin"]},
- {id:"ai",label:"Citizen AI",description:"Your shared Citizen assistant for investments, careers and workspace guidance.",roles:["candidate","customer","investor","shareholder","board_member","staff","back_office","admin"]},
- {id:"careers",label:"Careers",description:"Explore positions and manage your private applications.",roles:["candidate","customer","investor","shareholder","board_member","staff","back_office","admin"]},
+ {id:"ai",label:"Citizen AI",description:"Your shared Citizen assistant for investments, careers and workspace guidance.",roles:["candidate","customer","investor","shareholder","board_member","staff","back_office","admin","regulatory_reviewer"]},
+ {id:"careers",label:"Careers",description:"Explore positions and manage your private applications.",roles:["candidate","customer","investor","shareholder","board_member","staff","back_office","admin","regulatory_reviewer"]},
  {id:"recruitment",label:"Recruitment",description:"Admin vacancy, application and appointment management.",roles:["admin"]},
  {id:"executive",label:"Executive",description:"Your institutional overview, capital progress and priorities.",roles:["staff","back_office","admin","board_member"]},
- {id:"board",label:"Board",description:"Governance. Oversight. Strategic direction.",roles:["board_member","staff","back_office","admin"]},
- {id:"investors",label:"Investors",description:"Your investment, ownership records and institutional updates.",roles:["investor","shareholder","staff","back_office","admin"]},
- {id:"licensing",label:"Licensing",description:"Requirements, regulatory evidence and readiness.",roles:["board_member","staff","back_office","admin"],comingSoon:true},
- {id:"review",label:"Testing & Review",description:"Released evidence, testing scenarios and findings.",roles:["board_member","staff","back_office","admin"],comingSoon:true},
- {id:"finance",label:"Finance",description:"Budgets, treasury and controlled financial approvals.",roles:["staff","back_office","admin"],comingSoon:true},
- {id:"risk",label:"Risk & Compliance",description:"Risk registers, policy controls and incident escalation.",roles:["board_member","staff","back_office","admin"],comingSoon:true},
+ {id:"board",label:"Board",description:"Governance. Oversight. Strategic direction.",roles:["board_member","admin"]},
+ {id:"investors",label:"Investors",description:"Your investment, ownership records and institutional updates.",roles:["investor","shareholder","admin"]},
+ {id:"licensing",label:"Licensing",description:"Requirements, regulatory evidence and readiness.",roles:["board_member","back_office","admin","regulatory_reviewer"],comingSoon:true},
+ {id:"review",label:"Testing & Review",description:"Released evidence, testing scenarios and findings.",roles:["board_member","back_office","admin","regulatory_reviewer"],comingSoon:true},
+ {id:"finance",label:"Finance",description:"Budgets, treasury and controlled financial approvals.",roles:["back_office","admin"],comingSoon:true},
+ {id:"risk",label:"Risk & Compliance",description:"Risk registers, policy controls and incident escalation.",roles:["board_member","back_office","admin","regulatory_reviewer"],comingSoon:true},
  {id:"people",label:"People & Ownership",description:"Recruitment, employee directory and people operations.",roles:["staff","back_office","admin"],comingSoon:true},
- {id:"projects",label:"Projects",description:"Strategy, milestones and institutional delivery.",roles:["investor","shareholder","board_member","staff","back_office","admin"]},
- {id:"documents",label:"Documents",description:"Permissioned Google Drive documents and knowledge.",roles:["investor","shareholder","board_member","staff","back_office","admin"]},
- {id:"communications",label:"Communications",description:"Your institutional updates and notifications.",roles:["candidate","investor","shareholder","board_member","staff","back_office","admin"]},
- {id:"settings",label:"Settings",description:"Preferences, security and workspace integrations.",roles:["candidate","customer","investor","shareholder","board_member","staff","back_office","admin"]},
- {id:"profile",label:"Profile",description:"One Citizen identity with role-specific information.",roles:["candidate","customer","investor","shareholder","board_member","staff","back_office","admin"]},
+ {id:"projects",label:"Projects",description:"Published milestones shared with your audience.",roles:["investor","shareholder","board_member","staff","back_office","admin","regulatory_reviewer"]},
+ {id:"documents",label:"Documents",description:"Your own documents and explicitly shared Google Drive files.",path:"/document-centre",roles:["candidate","customer","investor","shareholder","board_member","staff","back_office","admin","regulatory_reviewer"]},
+ {id:"communications",label:"Communications",description:"Your institutional updates and notifications.",path:"/messages",roles:["candidate","customer","investor","shareholder","board_member","staff","back_office","admin","regulatory_reviewer"]},
+ {id:"settings",label:"Settings",description:"Preferences, security and workspace integrations.",roles:["candidate","customer","investor","shareholder","board_member","staff","back_office","admin","regulatory_reviewer"]},
+ {id:"profile",label:"Profile",description:"One Citizen identity with role-specific information.",roles:["candidate","customer","investor","shareholder","board_member","staff","back_office","admin","regulatory_reviewer"]},
 ];
 export const can = (roles: readonly string[],wanted:readonly string[]) => roles.includes("super_admin")||roles.some(role=>wanted.includes(role));
 export const registrationRole=(next:string|undefined):'candidate'|'investor'=>/^\/careers(?:[/?#]|$)/.test(safeReturn(next))?'candidate':'investor';
