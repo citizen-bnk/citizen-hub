@@ -8,12 +8,12 @@ import {driveUploadReady,uploadRecruitmentPDF} from '@/lib/drive-upload';
 import {MAX_UPLOAD_BYTES,recruitmentFile} from '@/lib/upload-policy';
 export const runtime='nodejs';
 export const maxDuration=60;
-export async function GET(){try{const p=await currentPerson();return Response.json({available:driveUploadReady(p?.scope||'live'),maxBytes:MAX_UPLOAD_BYTES,types:['application/pdf']},{headers:{'Cache-Control':'no-store'}});}catch(e){return failure(e);}}
+export async function GET(){try{const p=await currentPerson();return Response.json({available:await driveUploadReady(p?.scope||'live'),maxBytes:MAX_UPLOAD_BYTES,types:['application/pdf']},{headers:{'Cache-Control':'no-store'}});}catch(e){return failure(e);}}
 export async function POST(request:Request){try{
  requireOrigin(request);const person=await currentPerson(),draft=person?null:await applicantDraft();
  if(!person&&!draft)throw new ServiceIssue('APPLICATION_SESSION_EXPIRED','Restart the application before uploading your document.',409);
  const owner=person||{id:draft!.id,scope:'live' as const};
- if(!driveUploadReady(owner.scope))throw new ServiceIssue('DRIVE_UPLOAD_UNAVAILABLE','Citizen’s recruitment storage is not connected yet. You can submit your answers with CV evidence pending and provide it later.',503);
+ if(!await driveUploadReady(owner.scope))throw new ServiceIssue('DRIVE_UPLOAD_UNAVAILABLE','Citizen’s recruitment storage is not connected yet. You can submit your answers with CV evidence pending and provide it later.',503);
  const length=Number(request.headers.get('content-length'));if(length>MAX_UPLOAD_BYTES+65536)throw new ServiceIssue('FILE_TOO_LARGE','Choose a PDF smaller than 3 MB.',422);
  const form=await request.formData(),purpose=z.enum(['cv','references','selfie','id_photo']).parse(form.get('purpose')),file=form.get('file');
  if(!(file instanceof File))throw new ServiceIssue('FILE_REQUIRED','Choose your CV or references PDF to upload.',422);
