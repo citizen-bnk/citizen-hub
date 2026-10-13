@@ -13,11 +13,11 @@ export const modules: {id:ModuleId;label:string;description:string;roles:Role[];
  {id:"executive",label:"Executive",description:"Your institutional overview, capital progress and priorities.",roles:["staff","back_office","admin","board_member"]},
  {id:"board",label:"Board",description:"Governance. Oversight. Strategic direction.",roles:["board_member","admin"]},
  {id:"investors",label:"Investors",description:"Your investment, ownership records and institutional updates.",roles:["investor","shareholder","admin"]},
- {id:"licensing",label:"Licensing",description:"Requirements, regulatory evidence and readiness.",roles:["board_member","back_office","admin","regulatory_reviewer"],comingSoon:true},
- {id:"review",label:"Testing & Review",description:"Released evidence, testing scenarios and findings.",roles:["board_member","back_office","admin","regulatory_reviewer"],comingSoon:true},
- {id:"finance",label:"Finance",description:"Budgets, treasury and controlled financial approvals.",roles:["back_office","admin"],comingSoon:true},
- {id:"risk",label:"Risk & Compliance",description:"Risk registers, policy controls and incident escalation.",roles:["board_member","back_office","admin","regulatory_reviewer"],comingSoon:true},
- {id:"people",label:"People & Ownership",description:"Recruitment, employee directory and people operations.",roles:["staff","back_office","admin"],comingSoon:true},
+ {id:"licensing",label:"Licensing",description:"Requirements, regulatory evidence and readiness.",roles:["board_member","back_office","admin","regulatory_reviewer"]},
+ {id:"review",label:"Testing & Review",description:"Released evidence, testing scenarios and findings.",roles:["board_member","back_office","admin","regulatory_reviewer"]},
+ {id:"finance",label:"Finance",description:"Budget plans, recorded actuals and independent evidence review.",roles:["back_office","admin"],comingSoon:false},
+ {id:"risk",label:"Risk & Compliance",description:"Risk ownership, controls and evidence review.",roles:["board_member","back_office","admin"],comingSoon:false},
+ {id:"people",label:"People & Ownership",description:"Appointments, organisational directory and linked recruitment.",roles:["staff","back_office","admin"],comingSoon:false},
  {id:"projects",label:"Projects",description:"Published milestones shared with your audience.",roles:["investor","shareholder","board_member","staff","back_office","admin","regulatory_reviewer"]},
  {id:"documents",label:"Documents",description:"Your own documents and explicitly shared Google Drive files.",path:"/document-centre",roles:["candidate","customer","investor","shareholder","board_member","staff","back_office","admin","regulatory_reviewer"]},
  {id:"communications",label:"Communications",description:"Your institutional updates and notifications.",path:"/messages",roles:["candidate","customer","investor","shareholder","board_member","staff","back_office","admin","regulatory_reviewer"]},
@@ -25,7 +25,7 @@ export const modules: {id:ModuleId;label:string;description:string;roles:Role[];
  {id:"profile",label:"Profile",description:"One Citizen identity with role-specific information.",roles:["candidate","customer","investor","shareholder","board_member","staff","back_office","admin","regulatory_reviewer"]},
 ];
 export const can = (roles: readonly string[],wanted:readonly string[]) => roles.includes("super_admin")||roles.some(role=>wanted.includes(role));
-export const registrationRole=(next:string|undefined):'candidate'|'investor'=>/^\/careers(?:[/?#]|$)/.test(safeReturn(next))?'candidate':'investor';
+export const registrationRole=(next:string|undefined):'candidate'|'investor'|'customer'=>/^\/banking-onboarding(?:[/?#]|$)/.test(safeReturn(next))?'customer':/^\/careers(?:[/?#]|$)/.test(safeReturn(next))?'candidate':'investor';
 export const canVote = (roles:readonly string[])=>roles.includes('board_member');
 export function safeReturn(value:string|null|undefined):string { return value && value.startsWith("/")&&!value.startsWith("//")&&!/[\\\u0000-\u001f\u007f]/.test(value)?value:"/"; }
 export function driveReference(raw:string):{url:string;fileId:string} {

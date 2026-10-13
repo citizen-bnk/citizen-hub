@@ -24,7 +24,7 @@ export async function authenticate(email:string,password:string):Promise<Identit
   return identity;
  }catch(error){if(error instanceof ServiceIssue)throw error;throw new ServiceIssue("IDENTITY_UNAVAILABLE","The Citizen identity service could not be reached. Please retry.");}
 }
-export async function personForIdentity(identity:Identity,demonstration:boolean,initialRole:'candidate'|'investor'='investor'){
+export async function personForIdentity(identity:Identity,demonstration:boolean,initialRole:'candidate'|'investor'|'customer'='investor'){
  const scope=demonstration?"demonstration":"live";
  const existing=await query<{id:string}>("SELECT id FROM hub_people WHERE provider_subject=$1 AND scope=$2 AND active",[identity.id,scope]);
  if(existing[0]){await ownerAccess(existing[0].id,identity,scope);return existing[0].id;}
