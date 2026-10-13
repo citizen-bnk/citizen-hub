@@ -3,6 +3,7 @@ import { randomUUID,createPublicKey } from "node:crypto";
 import { importPKCS8,SignJWT,calculateJwkThumbprint } from "jose";
 import type { Person } from "./contracts";
 import { ServiceIssue } from "./db";
+import {query} from './db';
 export async function publicKeys(){
  const pem=process.env.PLATFORM_SIGNING_KEY?.replace(/\\n/g,'\n');
  if(!pem)throw new ServiceIssue('HANDOFF_NOT_CONFIGURED','Citizen service switching is not configured.');
@@ -10,7 +11,11 @@ export async function publicKeys(){
  return {keys:[{...jwk,kid,use:'sig',alg:'ES256'}]};
 }
 export async function bankingHandoff(person:Person,audience:'banking'|'app'){
- if(!person.roles.includes('customer'))throw new ServiceIssue('CUSTOMER_ROLE_REQUIRED','This identity does not include a banking customer role. Open a customer account through Internet Banking.',403);
+ if(!person.roles.includes('customer')){
+  const enrolled=await query(`WITH enrolled AS (INSERT INTO hub_memberships(person_id,role) VALUES($1,'customer') ON CONFLICT(person_id,role) DO UPDATE SET active=hub_memberships.active WHERE hub_memberships.active RETURNING person_id),logged AS (INSERT INTO hub_audit(actor_id,action,resource_type,resource_id,scope) SELECT person_id,'banking.pre_licensing_auto_enrolled','person',person_id::text,$2 FROM enrolled) SELECT person_id FROM enrolled`,[person.id,person.scope]);
+  if(!enrolled.length)throw new ServiceIssue('CUSTOMER_ACCESS_REVIEW_REQUIRED','Your banking access was revoked. An administrator must review it before you can sign in.',403);
+  person={...person,roles:[...person.roles,'customer']};
+ }
  const pem=process.env.PLATFORM_SIGNING_KEY?.replace(/\\n/g,'\n'),issuer=process.env.PLATFORM_ISSUER?.replace(/\/+$/,'');
  const base=audience==='banking'?process.env.BANKING_URL:process.env.APP_URL;
  if(!pem||!issuer||!base)throw new ServiceIssue('HANDOFF_NOT_CONFIGURED','Citizen service switching is not configured.');

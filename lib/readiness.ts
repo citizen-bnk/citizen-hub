@@ -8,11 +8,11 @@ export type Finding={id:string;author_id:string;system:string;title:string;detai
 export async function readiness(person:Person,filters:Record<string,string|undefined>={}) {
  if(!managesReadiness(person.roles))return null;
  const priority=['A','B'].includes(filters.priority||'')?filters.priority:'';
- const status=['open','in_progress','submitted','verified'].includes(filters.status||'')?filters.status:'';
+ const status=['open','in_progress','submitted','verified','unverified'].includes(filters.status||'')?filters.status:'';
  const q=(filters.q||'').slice(0,100),owner=(filters.owner||'').slice(0,100);
  const page=Math.max(1,Math.min(1000,Number.parseInt(filters.page||'1',10)||1));
  const params=[person.scope,priority,status,q,owner];
- const predicate="scope=$1 AND ($2='' OR priority=$2) AND ($3='' OR status=$3) AND ($4='' OR item ILIKE '%'||$4||'%' OR doc_title ILIKE '%'||$4||'%' OR doc_ref ILIKE '%'||$4||'%') AND ($5='' OR owner_role=$5)";
+ const predicate="scope=$1 AND ($2='' OR priority=$2) AND ($3='' OR ($3='unverified' AND status<>'verified') OR status=$3) AND ($4='' OR item ILIKE '%'||$4||'%' OR doc_title ILIKE '%'||$4||'%' OR doc_ref ILIKE '%'||$4||'%') AND ($5='' OR owner_role=$5)";
  const [items,counts,owners,sources,filtered]=await Promise.all([
   query<ReadinessItem>(`SELECT * FROM hub_readiness_items WHERE ${predicate} ORDER BY priority,source_number LIMIT 25 OFFSET $6`,[...params,(page-1)*25]),
   query<{total:number;priority_a:number;verified:number;submitted:number}>("SELECT count(*)::int AS total,count(*) FILTER(WHERE priority='A' AND status!='verified')::int AS priority_a,count(*) FILTER(WHERE status='verified')::int AS verified,count(*) FILTER(WHERE status='submitted')::int AS submitted FROM hub_readiness_items WHERE scope=$1",[person.scope]),

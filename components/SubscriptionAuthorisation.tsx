@@ -1,3 +1,37 @@
 "use client";
-import {useState} from 'react';
-export function SubscriptionAuthorisation({id,version,payment,basis}:{id:string;version:number;payment:string|null;basis:string|null}){const [selected,setSelected]=useState('settlement'),[busy,setBusy]=useState(false),[issue,setIssue]=useState('');return <div>{basis&&<p className="chip">Signing payment gate: {basis}</p>}<details><summary>Upload proof of payment</summary><form className="readiness-form" onSubmit={async e=>{e.preventDefault();setBusy(true);setIssue('');try{const body=new FormData(e.currentTarget);body.set('purpose','subscription_payment');body.set('subscription_id',id);body.set('version',String(version));const response=await fetch('/api/document-centre/upload',{method:'POST',body,signal:AbortSignal.timeout(55000)}),data=await response.json();if(!response.ok)throw Error(data.error);window.location.reload();}catch(error){setIssue(error instanceof Error?error.message:'Upload failed.');}finally{setBusy(false);}}}><label>Payment evidence<input name="file" type="file" required accept=".pdf,.png,.jpg,.jpeg"/></label><button className="button" disabled={busy}>Upload to private Drive</button></form></details><form className="readiness-form" onSubmit={async e=>{e.preventDefault();const f=new FormData(e.currentTarget);setBusy(true);setIssue('');try{const authorisation=selected==='settlement'?{basis:selected,proof_link:f.get('proof_link'),confirmed:f.get('confirmed')==='on'}:{basis:selected,motivation:f.get('motivation'),due_date:f.get('due_date'),confirmed:f.get('confirmed')==='on'};const response=await fetch('/api/investments/authorise-payment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,version,authorisation}),signal:AbortSignal.timeout(20000)}),data=await response.json();if(!response.ok)throw Error(data.error);window.location.reload();}catch(error){setIssue(error instanceof Error?error.message:'Authorisation failed.');}finally{setBusy(false);}}}><label>Signing prerequisite<select value={selected} onChange={e=>setSelected(e.target.value)}><option value="settlement">Confirm received payment</option><option value="deferred">Approve deferred payment</option></select></label>{selected==='settlement'?<label>Verified payment evidence<input name="proof_link" type="url" required defaultValue={payment||''} placeholder="https://drive.google.com/file/d/payment-evidence-id/view"/></label>:<><label>Deferral motivation<textarea name="motivation" required minLength={20} maxLength={2000} placeholder="Example: Approved payment deferral until the investor’s term deposit matures; payable by the date below."/></label><label>Payment due date<input name="due_date" type="date" required/></label></>}<label className="checkbox-label"><input name="confirmed" type="checkbox" required/>{selected==='settlement'?'I verified settlement against the receiving bank record, including amount, sender, date and reference.':'I approve this documented deferral and its payment due date for review by the signing parties.'}</label><button className="button primary" disabled={busy}>Authorise document signing</button></form>{issue&&<p role="alert">{issue} <a href={'/subscriptions/'+id}>Reload</a></p>}</div>;}
+
+import {OverlayAction} from '@/components/RecordUI';
+import { useState } from 'react';
+export function SubscriptionAuthorisation({ id, version, payment, basis }: {
+    id: string;
+    version: number;
+    payment: string | null;
+    basis: string | null;
+}) { const [selected, setSelected] = useState('settlement'), [busy, setBusy] = useState(false), [issue, setIssue] = useState(''); return <div>{basis && <p className="chip">Signing payment gate: {basis}</p>}<OverlayAction label="Upload proof of payment"><form className="readiness-form" onSubmit={async (e) => { e.preventDefault(); setBusy(true); setIssue(''); try {
+    const body = new FormData(e.currentTarget);
+    body.set('purpose', 'subscription_payment');
+    body.set('subscription_id', id);
+    body.set('version', String(version));
+    const response = await fetch('/api/document-centre/upload', { method: 'POST', body, signal: AbortSignal.timeout(55000) }), data = await response.json();
+    if (!response.ok)
+        throw Error(data.error);
+    window.location.reload();
+}
+catch (error) {
+    setIssue(error instanceof Error ? error.message : 'Upload failed.');
+}
+finally {
+    setBusy(false);
+} }}><label>Payment evidence<input name="file" type="file" required accept=".pdf,.png,.jpg,.jpeg"/></label><button className="button" disabled={busy}>Upload to private Drive</button></form></OverlayAction><form className="readiness-form" onSubmit={async (e) => { e.preventDefault(); const f = new FormData(e.currentTarget); setBusy(true); setIssue(''); try {
+    const authorisation = selected === 'settlement' ? { basis: selected, proof_link: f.get('proof_link'), confirmed: f.get('confirmed') === 'on' } : { basis: selected, motivation: f.get('motivation'), due_date: f.get('due_date'), confirmed: f.get('confirmed') === 'on' };
+    const response = await fetch('/api/investments/authorise-payment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, version, authorisation }), signal: AbortSignal.timeout(20000) }), data = await response.json();
+    if (!response.ok)
+        throw Error(data.error);
+    window.location.reload();
+}
+catch (error) {
+    setIssue(error instanceof Error ? error.message : 'Authorisation failed.');
+}
+finally {
+    setBusy(false);
+} }}><label>Signing prerequisite<select value={selected} onChange={e => setSelected(e.target.value)}><option value="settlement">Confirm received payment</option><option value="deferred">Approve deferred payment</option></select></label>{selected === 'settlement' ? <label>Verified payment evidence<input name="proof_link" type="url" required defaultValue={payment || ''} placeholder="https://drive.google.com/file/d/payment-evidence-id/view"/></label> : <><label>Deferral motivation<textarea name="motivation" required minLength={20} maxLength={2000} placeholder="Example: Approved payment deferral until the investor’s term deposit matures; payable by the date below."/></label><label>Payment due date<input name="due_date" type="date" required/></label></>}<label className="checkbox-label"><input name="confirmed" type="checkbox" required/>{selected === 'settlement' ? 'I verified settlement against the receiving bank record, including amount, sender, date and reference.' : 'I approve this documented deferral and its payment due date for review by the signing parties.'}</label><button className="button primary" disabled={busy}>Authorise document signing</button></form>{issue && <p role="alert">{issue} <a href={'/subscriptions/' + id}>Reload</a></p>}</div>; }
