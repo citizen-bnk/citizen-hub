@@ -28,5 +28,5 @@ export async function POST(request:Request){try{
  if(!isDemonstration&&identity.primary_email_verified===true)await claimApplications(id,identity.primary_email);
  const memberships=await query<{role:string}>('SELECT role FROM hub_memberships WHERE person_id=$1 AND active',[id]);
  await createSession(id);
- return NextResponse.json({ok:true,next:input.service&&memberships.some(item=>item.role==='customer')?`/api/platform/handoff?audience=${input.service}`:safeReturn(input.next)},{headers:{"Cache-Control":"no-store"}});
+ return NextResponse.json({ok:true,next:input.service&&memberships.some(item=>item.role==='customer')?`/api/platform/handoff?audience=${input.service}`:safeReturn(input.next||'/ai')},{headers:{"Cache-Control":"no-store"}});
 }catch(error){return failure(error);}}
