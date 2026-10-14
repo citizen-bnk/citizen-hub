@@ -1,0 +1,1 @@
+export function investmentAuthority(roles:readonly string[]){const superAdministrator=roles.includes('super_admin');return {superAdministrator,canManage:superAdministrator||roles.includes('admin'),needsIndependentBonusApproval:!superAdministrator};}

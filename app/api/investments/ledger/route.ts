@@ -2,6 +2,7 @@ import {requirePerson} from '@/lib/session';
 import {can,driveReference} from '@/lib/contracts';
 import {query,ServiceIssue} from '@/lib/db';
 import {failure,requireOrigin} from '@/lib/http';
+import {investmentAuthority} from '@/lib/investment-authority';
 import {ledgerInput} from '@/lib/investment-ledger-policy';
 export async function POST(request:Request){try{
  requireOrigin(request);const p=await requirePerson();if(!can(p.roles,['admin']))throw new ServiceIssue('INVESTMENT_ADMIN_REQUIRED','Only administrators can capture subscriptions and payments.',403);
@@ -37,11 +38,12 @@ export async function POST(request:Request){try{
   update=`UPDATE hub_subscription_requests r SET version=version+1,bonus_approved_by=NULL,bonus_approved_at=NULL,payment_authorisation_basis=NULL,payment_authorised_by=NULL,payment_authorised_at=NULL WHERE id=$1 AND scope=$2 AND version=$3 AND ${signing} AND EXISTS(SELECT 1 FROM hub_subscription_payments WHERE id=$6 AND subscription_id=r.id AND voided_at IS NULL) RETURNING r.*`;
   event=`UPDATE hub_subscription_payments SET voided_by=$4,voided_at=now(),void_note=$5 WHERE id=$6 AND subscription_id IN(SELECT id FROM changed) RETURNING id`;
  }else{
-  update=`UPDATE hub_subscription_requests r SET bonus_approved_by=$4,bonus_approved_at=now(),version=version+1 WHERE id=$1 AND scope=$2 AND version=$3 AND bonus_units>0 AND bonus_approved_by IS NULL AND COALESCE(bonus_terms_updated_by,captured_by) IS DISTINCT FROM $4::uuid AND ${paid}=units*unit_price AND digital_accepted_at IS NOT NULL AND status NOT IN('declined','withdrawn') RETURNING r.*`;
+  params.push(investmentAuthority(p.roles).superAdministrator);
+  update=`UPDATE hub_subscription_requests r SET bonus_approved_by=$4,bonus_approved_at=now(),version=version+1 WHERE id=$1 AND scope=$2 AND version=$3 AND bonus_units>0 AND bonus_approved_by IS NULL AND ($6::boolean OR COALESCE(bonus_terms_updated_by,captured_by) IS DISTINCT FROM $4::uuid) AND ${paid}=units*unit_price AND digital_accepted_at IS NOT NULL AND status NOT IN('declined','withdrawn') RETURNING r.*`;
   event=`SELECT id FROM changed`;
  }
  params.push(d.action);const actionParam='$'+params.length;
  const rows=await query<{id:string}>(`WITH changed AS (${update}),event AS (${event}),history AS (INSERT INTO hub_subscription_ledger_history(subscription_id,version,actor_id,action,snapshot) SELECT id,version,$4,${actionParam},to_jsonb(changed)||jsonb_build_object('note',$5::text) FROM changed),audit AS (INSERT INTO hub_audit(actor_id,action,resource_type,resource_id,scope) SELECT $4,'subscription.'||${actionParam},'subscription_request',id::text,scope FROM changed) SELECT id FROM changed`,params);
- if(!rows[0])throw new ServiceIssue('LEDGER_ACTION_UNAVAILABLE',d.action==='approve_bonus'?'Full recorded payment, digital investor acceptance and a different administrator are required before approving this bonus. Supporting documents do not block approval.':'The record changed, the amount exceeds the balance, the receipt is future-dated, or document signing prevents correction. Reload and review the ledger.',409);
+ if(!rows[0])throw new ServiceIssue('LEDGER_ACTION_UNAVAILABLE',d.action==='approve_bonus'?(investmentAuthority(p.roles).superAdministrator?'Record digital investor acceptance and full payment, then retry your super-administrator approval. No second administrator or document is required.':'Full recorded payment, digital investor acceptance and a different administrator are required before approving this bonus. Supporting documents do not block approval.'):'The record changed, the amount exceeds the balance, the receipt is future-dated, or document signing prevents correction. Reload and review the ledger.',409);
  return Response.json({ok:true,id:d.id});
  }catch(e){return failure(e);}}
