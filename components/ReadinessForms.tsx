@@ -1,4 +1,5 @@
 "use client";
+import {DriveAttachment} from './DriveAttachment';
 
 import {OverlayAction} from '@/components/RecordUI';
 import { useState } from 'react';
@@ -38,7 +39,7 @@ export function ReadinessForm({ item }: {
         void action.save(payload); }}>
  <span className="eyebrow">ITEM {item.source_number} · {item.doc_ref} · STEP {step + 1} OF 5</span><h2>{titles[step]}</h2><p className="muted">{item.item}</p>
  {step === 0 && <textarea aria-label="Completed information" maxLength={2000} value={value} onChange={e => setValue(e.target.value)} placeholder="Enter verified information; leave unknown facts open."/>}
- {step === 1 && <><input aria-label="Google Drive evidence link" type="url" value={link} onChange={e => setLink(e.target.value)} placeholder="https://drive.google.com/file/d/.../view"/><p className="muted">Keep the original in Drive. A shared link does not by itself prove execution or regulatory approval.</p></>}
+ {step === 1 && <><DriveAttachment value={link} onChange={setLink}/><p className="muted">Keep the original in Drive. A shared link does not by itself prove execution or regulatory approval.</p></>}
  {step === 2 && <input aria-label="Target completion date" type="date" value={due} onChange={e => setDue(e.target.value)}/>}
  {step === 3 && <textarea aria-label="Review note" maxLength={2000} value={note} onChange={e => setNote(e.target.value)} placeholder="Explain the source, any conflicts and checks still needed."/>}
  {step === 4 && <><select aria-label="Item status" value={status} onChange={e => setStatus(e.target.value)}><option value="open">Keep open</option><option value="in_progress">Work in progress</option><option value="submitted">Request independent verification</option></select><p className="muted">Verification needs completed information, Drive evidence and a different authorised reviewer. It records internal readiness, not CBL approval.</p></>}
