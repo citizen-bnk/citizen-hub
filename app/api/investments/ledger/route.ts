@@ -1,9 +1,12 @@
+import {after} from 'next/server';
+import {queueDocumentPack,processDocumentPack} from '@/lib/document-agent';
 import {requirePerson} from '@/lib/session';
 import {can,driveReference} from '@/lib/contracts';
 import {query,ServiceIssue} from '@/lib/db';
 import {failure,requireOrigin} from '@/lib/http';
 import {investmentAuthority} from '@/lib/investment-authority';
 import {ledgerInput} from '@/lib/investment-ledger-policy';
+export const maxDuration=300;
 export async function POST(request:Request){try{
  requireOrigin(request);const p=await requirePerson();if(!can(p.roles,['admin']))throw new ServiceIssue('INVESTMENT_ADMIN_REQUIRED','Only administrators can capture subscriptions and payments.',403);
  const d=ledgerInput.parse(await request.json());
@@ -18,7 +21,7 @@ export async function POST(request:Request){try{
   if(d.bonus_offering_kind==='person'){if(!d.bonus_offering_person_id||!d.bonus_source_record_id||d.bonus_offering_person_id===d.person_id)throw new ServiceIssue('BONUS_OFFEROR_REQUIRED','Select a different offering shareholder and their source holding.',422);const source=await query("SELECT id FROM hub_corporate_records WHERE id=$1 AND person_id=$2 AND scope=$3 AND kind='holding' AND status='confirmed' AND (facts->>'quantity')::numeric>=$4",[d.bonus_source_record_id,d.bonus_offering_person_id,p.scope,d.bonus_units]);if(!source.length)throw new ServiceIssue('TRANSFER_SOURCE_REVIEW_REQUIRED','A personal share offer needs a confirmed source holding with sufficient shares. Reconcile the source register first.',422);}
  
   const rows=await query<{id:string}>(`WITH offer AS (SELECT * FROM hub_opportunities WHERE id=$1 AND scope=$2 AND version=$3 AND status='open' AND (closes_at IS NULL OR closes_at>now()) AND disclosure->>'subscription_type'='SAFE' AND (scope='demonstration' OR (approved_by IS NOT NULL AND approved_at IS NOT NULL AND terms_link IS NOT NULL)) AND ($4>=min_units OR length($5)>=20) AND (max_units IS NULL OR $4<=max_units)), saved AS (INSERT INTO hub_subscription_requests(request_key,person_id,opportunity_id,opportunity_version,units,unit_price,currency,source_of_funds,purpose,scope,bonus_units,captured_by,capture_note,minimum_exception,ledger_managed,bonus_offering_kind,bonus_offering_person_id,bonus_source_record_id,investor_consent_pending,bonus_terms_updated_by) SELECT $6,p.id,o.id,o.version,$4,o.unit_price,o.currency,'Administrator capture; investor source-of-funds confirmation pending',$7,$2,$8,$9,$7,NULLIF($5,''),true,$11,$12::uuid,$13::uuid,true,$9 FROM offer o JOIN hub_people p ON p.id=$10 AND p.scope=$2 AND p.active ON CONFLICT(person_id,request_key) DO NOTHING RETURNING *), history AS (INSERT INTO hub_subscription_ledger_history(subscription_id,version,actor_id,action,snapshot) SELECT id,version,$9,'capture',to_jsonb(saved) FROM saved), membership AS (INSERT INTO hub_memberships(person_id,role) SELECT person_id,'investor' FROM saved ON CONFLICT(person_id,role) DO NOTHING), audit AS (INSERT INTO hub_audit(actor_id,action,resource_type,resource_id,scope) SELECT $9,'subscription.admin_captured','subscription_request',id::text,scope FROM saved) SELECT id FROM saved UNION ALL SELECT id FROM hub_subscription_requests WHERE request_key=$6 AND person_id=$10 AND scope=$2 AND captured_by=$9 AND opportunity_id=$1 AND units=$4 AND bonus_units=$8`,[d.opportunity_id,p.scope,d.offer_version,d.units,d.minimum_exception,d.request_key,d.note,d.bonus_units,p.id,d.person_id,d.bonus_offering_kind,d.bonus_offering_person_id,d.bonus_source_record_id]);
-  if(!rows[0])throw new ServiceIssue('SUBSCRIPTION_CAPTURE_UNAVAILABLE','Reload the approved offer and investor. A below-minimum additional investment needs a documented exception.',409);return Response.json({ok:true,id:rows[0].id});
+  if(!rows[0])throw new ServiceIssue('SUBSCRIPTION_CAPTURE_UNAVAILABLE','Reload the approved offer and investor. A below-minimum additional investment needs a documented exception.',409);const job=await queueDocumentPack(p,rows[0].id);after(()=>processDocumentPack(job));return Response.json({ok:true,id:rows[0].id});
  }
  let proof:string|null=null;if(d.action==='payment'&&d.proof_link){try{proof=driveReference(d.proof_link).url;}catch{throw new ServiceIssue('DOCUMENT_LINK_INVALID','Use a Google Drive payment evidence file.',422);}}
  if(d.action==='payment'){
@@ -45,5 +48,6 @@ export async function POST(request:Request){try{
  params.push(d.action);const actionParam='$'+params.length;
  const rows=await query<{id:string}>(`WITH changed AS (${update}),event AS (${event}),history AS (INSERT INTO hub_subscription_ledger_history(subscription_id,version,actor_id,action,snapshot) SELECT id,version,$4,${actionParam},to_jsonb(changed)||jsonb_build_object('note',$5::text) FROM changed),audit AS (INSERT INTO hub_audit(actor_id,action,resource_type,resource_id,scope) SELECT $4,'subscription.'||${actionParam},'subscription_request',id::text,scope FROM changed) SELECT id FROM changed`,params);
  if(!rows[0])throw new ServiceIssue('LEDGER_ACTION_UNAVAILABLE',d.action==='approve_bonus'?(investmentAuthority(p.roles).superAdministrator?'Record full payment, then complete your super-administrator approval. No investor acceptance, second administrator or document is required.':'Full recorded payment, digital investor acceptance and a different administrator are required before approving this bonus. Supporting documents do not block approval.'):'The record changed, the amount exceeds the balance, the receipt is future-dated, or document signing prevents correction. Reload and review the ledger.',409);
+ const job=await queueDocumentPack(p,d.id);after(()=>processDocumentPack(job));
  return Response.json({ok:true,id:d.id});
  }catch(e){return failure(e);}}

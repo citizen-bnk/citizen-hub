@@ -21,7 +21,7 @@ export function TemplateApproval({id,version}:{id:string;version:number}){const 
 export function DocumentUpload({templates=false}:{templates?:boolean}){
  const [busy,setBusy]=useState(false),[issue,setIssue]=useState('');
  return <form className="readiness-form" onSubmit={async e=>{e.preventDefault();setBusy(true);setIssue('');try{const body=new FormData(e.currentTarget);const response=await fetch('/api/document-centre/upload',{method:'POST',body,signal:AbortSignal.timeout(55000)}),result=await response.json();if(!response.ok)throw Error(result.error);window.location.reload();}catch(error){setIssue(error instanceof Error?error.message:'Upload failed.');}finally{setBusy(false);}}}>
- {templates?<label>Template<select name="purpose"><option value="template_safe">SAFE R10 — DOCX</option><option value="template_certificate">Share certificate — fillable PDF</option></select></label>:<input type="hidden" name="purpose" value="company_pdf"/>}
+ {templates?<label>Template<select name="purpose"><option value="template_safe">SAFE R10 — DOCX</option><option value="template_safe_topup">SAFE top-up addendum (DOCX)</option><option value="template_certificate">Share certificate — fillable PDF</option></select></label>:<input type="hidden" name="purpose" value="company_pdf"/>}
  <label>{templates?'Reviewed source file':'Private PDF'}<input type="file" name="file" required accept={templates?'.docx,.pdf':'.pdf,application/pdf'}/></label>
  <p className="muted">{templates?'Importing a template clears approval. Review its exact version before generating documents.':'Upload a PDF below 3 MB. Choose recipients after filing.'}</p>
  <button className="button primary" disabled={busy}>{busy?'Uploading…':'Upload to private Drive'}</button><Issue message={issue}/></form>;

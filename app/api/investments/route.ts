@@ -1,3 +1,5 @@
+import {after} from 'next/server';
+import {queueDocumentPack,processDocumentPack} from '@/lib/document-agent';
 import {NextResponse} from 'next/server';
 import {subscriptionInput as schema} from '@/lib/investment-policy';
 import {requirePerson} from '@/lib/session';
@@ -9,6 +11,7 @@ async function ensureInvestorCompartment(personId:string,requestId:string,scope:
  // Derive profile values from the saved request on retries, never from changed client input.
  await query(`WITH request AS (SELECT person_id,source_of_funds,purpose,applicant_details FROM hub_subscription_requests WHERE id=$2 AND person_id=$1 AND scope=$3), membership AS (INSERT INTO hub_memberships(person_id,role) SELECT person_id,'investor' FROM request ON CONFLICT(person_id,role) DO NOTHING RETURNING person_id) UPDATE hub_people p SET role_profiles=jsonb_set(COALESCE(p.role_profiles,'{}'::jsonb),'{investor}',COALESCE(p.role_profiles->'investor','{}'::jsonb)||jsonb_build_object('source_of_funds',r.source_of_funds,'investment_purpose',r.purpose)||r.applicant_details),version=p.version+1,updated_at=now() FROM request r WHERE p.id=r.person_id AND p.scope=$3`,[personId,requestId,scope]);
 }
+export const maxDuration=300;
 export async function POST(req:Request){try{
  requireOrigin(req);const person=await requirePerson();
  if(!can(person.roles,['candidate','customer','investor','shareholder','board_member','staff','back_office','admin']))throw new ServiceIssue('INVESTMENT_ACCESS_REQUIRED','Use your own customer or investor account to subscribe.',403);
@@ -19,6 +22,7 @@ export async function POST(req:Request){try{
  if(!rows[0]){const replay=await query<{id:string}>('SELECT id FROM hub_subscription_requests WHERE person_id=$1 AND request_key=$2 AND scope=$3',[person.id,input.request_key,person.scope]);if(replay[0]){await ensureInvestorCompartment(person.id,replay[0].id,person.scope);return NextResponse.json({ok:true,id:replay[0].id,replayed:true});}throw new ServiceIssue('OPPORTUNITY_CHANGED','This opportunity changed, closed, or the share quantity is outside its limits. Reload the opportunities before submitting again.',409);}
  // Requesting an investment adds only the investor compartment to this identity, never ownership or corporate privileges.
  await ensureInvestorCompartment(person.id,rows[0].id,person.scope);
+ const job=await queueDocumentPack(person,rows[0].id);after(()=>processDocumentPack(job));
  return NextResponse.json({ok:true,id:rows[0].id});
  }catch(e){return failure(e);}}
 
