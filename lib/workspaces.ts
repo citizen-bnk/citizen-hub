@@ -1,6 +1,6 @@
 import {modules,can,type Role} from './contracts';
 export const workspaces=[
- {id:'invest',label:'Invest',icon:'investors',modules:['opportunities','investors','administration'],extras:[{label:'Cap table',path:'/cap-table',roles:['admin']},{label:'Review subscriptions',path:'/subscriptions',roles:['admin']},{label:'Investment data room',path:'/dataroom',roles:['investor','shareholder','customer','admin']}]},
+ {id:'invest',label:'Invest',icon:'investors',modules:['opportunities','investors','administration'],extras:[{label:'Subscribe on behalf',path:'/subscriptions/new',roles:['admin']},{label:'Cap table',path:'/cap-table',roles:['admin']},{label:'Review subscriptions',path:'/subscriptions',roles:['admin']},{label:'Investment data room',path:'/dataroom',roles:['investor','shareholder','customer','admin']}]},
  {id:'governance',label:'Governance',icon:'board',modules:['board','appointments'],extras:[]},
  {id:'careers',label:'Careers',icon:'careers',modules:['careers','recruitment'],extras:[{label:'My applications',path:'/applications',roles:['candidate','customer','investor','shareholder','board_member','staff','back_office','admin','regulatory_reviewer']} ]},
  {id:'business',label:'Business',icon:'executive',modules:['executive','projects','licensing','review','finance','risk','people'],extras:[]},

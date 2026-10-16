@@ -26,7 +26,7 @@ function RecordCard({ row, people, actor, superAdmin }: {
 }) {
     const name = text(row.facts.holder) || text(row.facts.name) || row.display_name || row.title;
     const email = row.email || text(row.facts.email);
-    return <article className="stakeholder-card"><h3>{name}</h3><p className="muted">Source record: {row.reference}</p>{email ? <p><a href={'mailto:' + email}>{email}</a></p> : <p className="muted">Individual email not yet verified or linked.</p>}
+    return <article className="stakeholder-card"><h3>{name}</h3>{row.person_id&&<a className="button" href={'/subscriptions/new?person='+row.person_id}>Subscribe on behalf</a>}<p className="muted">Source record: {row.reference}</p>{email ? <p><a href={'mailto:' + email}>{email}</a></p> : <p className="muted">Individual email not yet verified or linked.</p>}
   {row.kind === 'holding' && <><p>{Number(row.facts.quantity).toLocaleString('en-ZA')} reported shares · {text(row.facts.instrument)}</p><p>{text(row.facts.basis)}</p></>}
   {row.kind === 'stakeholder' && <><p>{text(row.facts.relationship)}</p><p className="muted">{text(row.facts.contact_status)}</p>{text(row.facts.interim_contact_email) && <p>Interim communication address: {text(row.facts.interim_contact_email)}. This does not authorise access to another investor’s account.</p>}{text(row.facts.authorised_representative) && <p>Authorised representative: {text(row.facts.authorised_representative)}</p>}</>}
   <ReconciliationStatus id={row.id} status={row.status} roles={superAdmin?['super_admin']:[]}/>

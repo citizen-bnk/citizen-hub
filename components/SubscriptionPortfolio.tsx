@@ -1,29 +1,21 @@
-import {OverlayAction} from '@/components/RecordUI';
-import {RecordControls} from '@/components/RecordUI';
-import { RecordList } from '@/components/RecordUI';
-import { recordMetadata } from '@/lib/record-list';
-import type { Person } from '@/lib/contracts';
-import { subscriptionRecords } from '@/lib/investments';
-import { money } from '@/lib/data';
-import { SubscriptionReview } from './SubscriptionReview';
-import { ServiceIssue } from '@/lib/db';
-import { Recovery } from './Recovery';
-import { statusLabels, nextSubscriptionAction, paidStatus, type SubscriptionStatus } from '@/lib/subscription-lifecycle';
-export async function SubscriptionPortfolio({ person, reviewQueue = false, status = 'all' }: {
-    person: Person;
-    reviewQueue?: boolean;
-    status?: string;
-}) {
-    let records;
-    try {
-        records = await subscriptionRecords(person, reviewQueue);
-    }
-    catch (e) {
-        if (e instanceof ServiceIssue)
-            return <Recovery code={e.code} message={e.message}/>;
-        throw e;
-    }
-    const visible = records.filter(record => status === 'all' || (status==='paid'?paidStatus(record.status):status==='incomplete'?!['received','pending_conversion','declined','withdrawn'].includes(record.status):record.status === status));
-    const listPath=reviewQueue?'/subscriptions':'/subscriptions?mine=1';
-    return <section id="subscriptions"><p>Subscriptions are private. Payment evidence is reviewed before your investment is confirmed; SAFE reference shares remain separate from issued holdings.</p><div className="subscription-summary"><a href={listPath}><strong>{records.length}</strong> subscriptions</a><a href={listPath+(reviewQueue?'?':'&')+'status=paid'}><strong>{records.filter(r => paidStatus(r.status)).length}</strong> payments confirmed</a><a href={listPath+(reviewQueue?'?':'&')+'status=incomplete'}><strong>{records.filter(r => !["received", "pending_conversion", "declined", "withdrawn"].includes(r.status)).length}</strong> awaiting completion</a></div>{visible.length ? <div className="subscription-cards"><RecordList label="Subscriptions" records={visible.map(r => ({ ...recordMetadata(r), content: <article className="finding-row" key={r.id}><h3>{r.title}</h3>{reviewQueue && <p>{r.display_name} · {r.email}</p>}<p>{r.units.toLocaleString()} reference shares · {money(Number(r.unit_price) * r.units, r.currency)}</p><p>{money(r.recorded_receipts,r.currency)} paid · {money(Math.max(0,Math.round(Number(r.unit_price)*100)*r.units-Math.round(Number(r.recorded_receipts)*100))/100,r.currency)} outstanding · {r.bonus_units} conditional bonus reference shares</p><span className="chip">{statusLabels[r.status as SubscriptionStatus] || r.status}</span>{!['received', 'pending_conversion', 'declined', 'withdrawn'].includes(r.status) && <p className="muted">{r.payment_link ? 'Payment evidence received — settlement review pending' : 'Payment evidence outstanding — investment unconfirmed'}</p>}<p>{nextSubscriptionAction(r)}</p><small>{r.certificate_reference ? `Reference ${r.certificate_reference}` : 'Certificate reference not assigned yet'}</small>{r.review_note && <p>{r.review_note}</p>}<RecordControls><a className="button" href={'/subscriptions/' + r.id}>View subscription and payment</a>{reviewQueue && <OverlayAction label="Review subscription"><SubscriptionReview id={r.id} version={r.version} status={r.status} agreement={r.agreement_link} payment={r.payment_link} invoice={r.invoice_link} receipt={r.receipt_link} certificate={r.certificate_preview_link}/></OverlayAction>}</RecordControls></article> }))}/></div> : <p className="empty-state">{status === "all" ? "No subscriptions yet." : "No subscriptions match this status."} <a href="/opportunities">Subscribe for Shares</a>.</p>}</section>;
+import {InvestmentCardGrid} from './InvestmentCardGrid';
+import {OverlayAction,RecordActions} from './RecordUI';
+import {subscriptionRecords} from '@/lib/investments';
+import {type Person} from '@/lib/contracts';
+import {money} from '@/lib/data';
+import {query} from '@/lib/db';
+import {SubscriptionPayment} from './SubscriptionPayment';
+import {SubscriptionReview} from './SubscriptionReview';
+import {statusLabels,type SubscriptionStatus,paidStatus} from '@/lib/subscription-lifecycle';
+export async function SubscriptionPortfolio({person,reviewQueue=false,status='all'}:{person:Person;reviewQueue?:boolean;status?:string}){
+ const records=await subscriptionRecords(person,reviewQueue),base=reviewQueue?'/subscriptions':'/subscriptions?mine=1';
+ const visible=records.filter(r=>status==='all'||(status==='paid'?paidStatus(r.status):status==='incomplete'?!['received','pending_conversion','declined','withdrawn'].includes(r.status):r.status===status));
+ const payments=visible.length?await query<{subscription_id:string;amount:string;received_on:string;reference:string}>(`SELECT p.subscription_id,p.amount,p.received_on::text,p.reference FROM hub_subscription_payments p JOIN hub_subscription_requests r ON r.id=p.subscription_id WHERE r.scope=$1 AND r.id=ANY($2::uuid[]) AND p.voided_at IS NULL ORDER BY p.received_on DESC`,[person.scope,visible.map(r=>r.id)]):[];
+ return <section id="subscriptions"><div className="capital-kpis"><a href={base}><strong>{records.length}</strong>Subscriptions</a><a href={base+(reviewQueue?'?':'&')+'status=paid'}><strong>{records.filter(r=>paidStatus(r.status)).length}</strong>Payments confirmed</a><a href={base+(reviewQueue?'?':'&')+'status=incomplete'}><strong>{records.filter(r=>!['received','pending_conversion','declined','withdrawn'].includes(r.status)).length}</strong>Awaiting completion</a><a href="/opportunities"><strong>+</strong>Subscribe for Shares</a></div><InvestmentCardGrid entries={visible.map(r=>({text:[r.display_name,r.title,r.certificate_reference,r.email].join(' '),amount:Number(r.unit_price)*r.units}))}>{visible.map(r=>{
+ const total=Math.round(Number(r.unit_price)*100)*r.units/100,received=Number(r.recorded_receipts),remaining=Math.max(0,total-received),inactive=['declined','withdrawn'].includes(r.status),reference=r.certificate_reference||'Reference pending';
+ return <article className="investment-card" key={r.id}><header><div><strong>{reference}</strong><h3>{r.title}</h3>{reviewQueue&&<p>{r.display_name}</p>}<span className="chip">{statusLabels[r.status as SubscriptionStatus]||r.status}</span></div><RecordActions name={reference} actions={[{label:'Open full record',href:'/subscriptions/'+r.id},{label:'Top up investment',href:reviewQueue?'/subscriptions/new?person='+r.person_id:'/opportunities'},...(reviewQueue?[{label:'Review subscription',content:<SubscriptionReview id={r.id} version={r.version} status={r.status} agreement={r.agreement_link} payment={r.payment_link} invoice={r.invoice_link} receipt={r.receipt_link} certificate={r.certificate_preview_link}/>}]:[])]}/></header>
+ <dl><div><dt>SAFE reference units</dt><dd>{r.units.toLocaleString()}</dd></div><div><dt>Price per unit</dt><dd>{money(r.unit_price,r.currency)}</dd></div><div><dt>Total investment</dt><dd>{money(total,r.currency)}</dd></div><div><dt>Amount paid</dt><dd>{money(received,r.currency)}</dd></div><div><dt>Remaining</dt><dd>{money(remaining,r.currency)}</dd></div></dl><p className="muted">{r.certificate_preview_link?'Certificate preview available · conversion pending':'Certificate preview not prepared'}</p>
+ <div className="actions">{remaining>0&&!inactive&&r.display_name!==undefined&&<>{reviewQueue?<a className="button primary" href={'/subscriptions/'+r.id+'#record-payment'}>Record payment</a>:<OverlayAction label="Pay now / Add proof" primary><SubscriptionPayment id={r.id} amount={money(remaining,r.currency)}/></OverlayAction>}</>}
+ <OverlayAction label="View details"><h3>{reference} · {r.title}</h3><p>{r.units.toLocaleString()} SAFE reference units · {money(total,r.currency)}</p><p>{money(received,r.currency)} paid · {money(remaining,r.currency)} outstanding</p><p>{r.review_note}</p><h3>Payment history</h3>{payments.filter(p=>p.subscription_id===r.id).map((p,i)=><p key={i}>{p.received_on.slice(0,10)} · {p.reference} · {money(p.amount,r.currency)}</p>)}{!payments.some(p=>p.subscription_id===r.id)&&<p>No payments recorded.</p>}<h3>Documents</h3><div className="actions">{[[r.agreement_link,'SAFE agreement'],[r.invoice_link,'Invoice'],[r.receipt_link,'Receipt'],[r.certificate_preview_link,'Certificate preview']].filter(([url])=>url).map(([url,label])=><a className="button" key={label} href={url!} target="_blank" rel="noopener noreferrer">{label} ↗</a>)}</div><a className="button primary" href={'/subscriptions/'+r.id+'#subscription-documents'}>Manage document pack</a></OverlayAction></div></article>;
+ })}</InvestmentCardGrid>{!visible.length&&<p>No subscriptions match this view. <a href="/opportunities">Subscribe for Shares</a></p>}<p className="muted">SAFE reference units are not issued ordinary shares. Payment and conversion are tracked separately.</p></section>;
 }
