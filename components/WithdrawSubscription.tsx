@@ -1,0 +1,7 @@
+"use client";
+import {useState} from 'react';
+export function WithdrawSubscription({id,version}:{id:string;version:number}){
+ const [open,setOpen]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ async function withdraw(){setBusy(true);setError('');try{const response=await fetch('/api/investments/'+id+'/withdraw',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version}),signal:AbortSignal.timeout(30000)});const data=await response.json().catch(()=>({}));if(!response.ok)throw Error(data.error||'Withdrawal could not be saved.');window.location.reload();}catch(e){setError(e instanceof Error?e.message:'The connection was interrupted. Reload to check the latest status.');}finally{setBusy(false);}}
+ return <section className="withdraw-subscription"><button className="button" aria-expanded={open} onClick={()=>setOpen(!open)}>Withdraw unpaid subscription</button>{open&&<div><p>This closes only this unpaid subscription. Its record remains available. This does not cancel a signed agreement or refund a payment.</p>{error&&<p role="alert">{error} <a href={'/subscriptions/'+id}>Reload subscription</a></p>}<div className="actions"><button className="button" disabled={busy} onClick={()=>setOpen(false)}>Keep subscription</button><button className="button" disabled={busy} onClick={()=>void withdraw()}>{busy?'Saving…':'Confirm withdrawal'}</button></div></div>}</section>;
+}
