@@ -9,6 +9,7 @@ New workspaces for the investor journey. They were built from the product behavi
 | My Subscriptions | `/subscriptions`, `/subscriptions/[id]` | same | Private list with status filters, progress timeline, next step, linked documents and withdrawal until an agreement or payment record is attached. |
 | Subscription Review | `/review` | back office, admin | Queue by status. A reviewer moves a request along, attaches Drive evidence and confirms settlement. |
 | Data Room | `/dataroom` | investor, shareholder, board member, staff, back office, admin | Documents by stage. Investors see stage 1 plus any stage an administrator granted with evidence. Questions and replies. Administrators add drafts, release or withdraw documents and grant access. |
+| Users & Roles | `/users` | admin | Who has access. Change roles with a recorded reason; the person's other sessions are signed out. The database function `hub_assign_roles` holds the rules (version check, super admin protection, owner protection). Hub also blocks changing your own roles. |
 | Activity Log | `/activity` | back office, admin | The latest 200 audited actions. |
 
 ## Rules enforced on the server
@@ -23,7 +24,7 @@ New workspaces for the investor journey. They were built from the product behavi
 
 ## What this does not do
 
-No card, bank or crypto payment is taken. Hub records and reviews; a person confirms settlement. Certificates, SAFE conversion, signing, recruitment, user and role administration, investor leads and messaging are not part of this release and are still shown as Coming soon or are unchanged.
+No card, bank or crypto payment is taken. Hub records and reviews; a person confirms settlement. Certificates, SAFE conversion, signing, recruitment, investor leads and messaging are not part of this release and are still shown as Coming soon or are unchanged.
 
 ## Go-live checklist
 

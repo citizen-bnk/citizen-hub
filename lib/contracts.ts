@@ -1,7 +1,7 @@
-export type Role = "customer"|"investor"|"shareholder"|"board_member"|"staff"|"back_office"|"admin"|"super_admin";
+export type Role = "customer"|"investor"|"shareholder"|"board_member"|"staff"|"back_office"|"admin"|"super_admin"|"candidate"|"regulatory_reviewer";
 export type Scope = "live"|"demonstration";
 export type Person = {id:string;provider_subject:string;email:string;display_name:string;phone:string|null;country:string|null;occupation:string|null;bio:string|null;version:number;scope:Scope;roles:Role[];account_key:string|null;street_address?:string;city?:string;employer?:string;role_profiles?:Record<string,Record<string,string>>};
-export type ModuleId = "executive"|"board"|"investors"|"licensing"|"documents"|"finance"|"projects"|"people"|"risk"|"communications"|"ai"|"settings"|"profile"|"opportunities"|"subscriptions"|"dataroom"|"review"|"activity";
+export type ModuleId = "executive"|"board"|"investors"|"licensing"|"documents"|"finance"|"projects"|"people"|"risk"|"communications"|"ai"|"settings"|"profile"|"opportunities"|"subscriptions"|"dataroom"|"review"|"activity"|"users";
 export const modules: {id:ModuleId;label:string;description:string;roles:Role[];comingSoon?:boolean}[] = [
  {id:"ai",label:"Citizen AI",description:"Permission-aware assistance and document discovery.",roles:["investor","shareholder","board_member","staff","back_office","admin"],comingSoon:true},
  {id:"executive",label:"Executive",description:"Your institutional overview, capital progress and priorities.",roles:["staff","back_office","admin","board_member"]},
@@ -16,6 +16,7 @@ export const modules: {id:ModuleId;label:string;description:string;roles:Role[];
  {id:"subscriptions",label:"My Subscriptions",description:"Your subscription requests, their status and next steps.",roles:["investor","shareholder","board_member"]},
  {id:"dataroom",label:"Data Room",description:"Stage-gated investor documents and questions.",roles:["investor","shareholder","board_member","staff","back_office","admin"]},
  {id:"review",label:"Subscription Review",description:"Review subscription requests and record settlement evidence.",roles:["back_office","admin"]},
+ {id:"users",label:"Users & Roles",description:"Review who has access and change roles with a recorded reason.",roles:["admin"]},
  {id:"activity",label:"Activity Log",description:"Audited actions across the institution.",roles:["back_office","admin"]},
  {id:"documents",label:"Documents",description:"Permissioned Google Drive documents and knowledge.",roles:["investor","shareholder","board_member","staff","back_office","admin"]},
  {id:"communications",label:"Communications",description:"Your institutional updates and notifications.",roles:["investor","shareholder","board_member","staff","back_office","admin"]},
