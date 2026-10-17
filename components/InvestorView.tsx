@@ -1,7 +1,8 @@
 import {SubscriptionPortfolio} from './SubscriptionPortfolio';
 import {query} from '@/lib/db';
 import {Panel,Hero,Documents} from './BoardView';
-import {money,type Overview} from '@/lib/data';
+import {type Overview} from '@/lib/data';
+import {investmentMoney as money} from '@/lib/investment-display';
 import {type Person,can} from '@/lib/contracts';
 import {subscriptionRecords} from '@/lib/investments';
 import {portfolioTotals,capitalSummary,type HoldingSummary} from '@/lib/capital-summary';
