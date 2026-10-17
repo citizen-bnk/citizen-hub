@@ -4,7 +4,7 @@ The institutional workspace for Citizen investors, shareholders, board members a
 
 ## Run
 
-Use Node 22, `npm ci`, copy `.env.example` to `.env.local` and configure the server variables securely. Run `npm run dev` (port 3002). `npm test` checks authentication proof contracts, redirects, document references and role access. `npm run build` validates production compilation and TypeScript.
+Use Node 22, `npm ci`, copy `.env.example` to `.env.local` and configure the server variables securely. Run `npm run dev` (port 3002). `npm test` checks authentication proof contracts, redirects, document references and role access, and runs the subscription and data room logic against Core's real institutional migrations in an in-memory Postgres (PGlite). `npm run build` validates production compilation and TypeScript.
 
 ## Data and authentication
 
@@ -22,6 +22,6 @@ Document records contain Google Drive file IDs, shared links and permission meta
 
 ## Availability
 
-Implemented: role-aware launch, executive overview, board agenda/RSVP/voting, investor records, shared profile editing, personal tasks, notifications, and Drive document linking. Licensing, treasury, risk, careers, projects, AI, subscription/payment processing, certificates, committee administration and secure discussions are shown as Coming soon. This release must not be described as completing those business workflows or as ready to accept real money.
+Implemented: role-aware launch, executive overview, board agenda/RSVP/voting, investor records, shared profile editing, personal tasks, notifications, and Drive document linking. Also implemented (see [docs/INVESTOR_WORKSPACES.md](docs/INVESTOR_WORKSPACES.md)): investment opportunities and a guided subscription request, private subscription tracking with withdrawal, a back-office review queue that records agreement and payment evidence, a stage-gated investor data room with questions and access grants, and an audited activity log. Licensing, treasury, risk, careers, projects, AI, certificates, committee administration and secure discussions are shown as Coming soon. Hub records and reviews subscription requests; it does not process card, bank or crypto payments, and settlement is confirmed by a person. This release must not be described as completing those business workflows or as ready to accept real money.
 
 Vercel framework: Next.js; build `npm run build`; install `npm ci`; output directory unset. Configure the variables in `.env.example` in the existing Hub project. Deploy the verified Git commit and test canonical URLs after promotion.

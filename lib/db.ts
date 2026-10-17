@@ -1,6 +1,11 @@
 import "server-only";
 import { neon } from "@neondatabase/serverless";
+type Executor=(statement:string,params:unknown[])=>Promise<unknown[]>;
+let testExecutor:Executor|null=null;
+/** Tests only: route queries to an in-memory database instead of Neon. */
+export function useTestExecutor(executor:Executor|null){testExecutor=executor;}
 export async function query<T=Record<string,unknown>>(statement:string,params:unknown[]=[]):Promise<T[]> {
+ if(testExecutor)return await testExecutor(statement,params) as T[];
  const url=process.env.DATABASE_URL;
  if(!url)throw new ServiceIssue("DATABASE_UNAVAILABLE","The institutional data service is not configured.");
  const readOnly=/^\s*SELECT\b/i.test(statement);
