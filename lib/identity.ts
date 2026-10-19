@@ -30,6 +30,9 @@ export async function personForIdentity(identity:Identity,demonstration:boolean,
  if(existing[0]){await ownerAccess(existing[0].id,identity,scope);return existing[0].id;}
  if(demonstration)throw new ServiceIssue("ACCOUNT_NOT_SEEDED","This demonstration account has not been provisioned.");
  if(identity.primary_email_verified!==true)throw new ServiceIssue('EMAIL_VERIFICATION_REQUIRED','Verify your email using the link sent when you registered, then sign in to continue.',403);
+ // Only explicitly pending, investor-only records may be claimed by a verified email owner.
+ const pending=await query<{id:string}>(`WITH claimed AS (UPDATE hub_people p SET provider_subject=$1,updated_at=now() WHERE scope='live' AND active AND provider_subject='pending-investor:'||id::text AND lower(email)=lower($2) AND NOT EXISTS(SELECT 1 FROM hub_memberships m WHERE m.person_id=p.id AND m.role<>'investor') AND (SELECT count(*) FROM hub_people candidate WHERE candidate.scope='live' AND lower(candidate.email)=lower($2))=1 RETURNING id),audit AS (INSERT INTO hub_audit(actor_id,action,resource_type,resource_id,scope) SELECT id,'investor.identity_claimed','person',id::text,'live' FROM claimed) SELECT id FROM claimed`,[identity.id,identity.primary_email]);
+ if(pending[0]){await ownerAccess(pending[0].id,identity,scope);return pending[0].id;}
  const created=await query<{id:string}>(`WITH person AS (INSERT INTO hub_people(provider_subject,email,display_name,scope) VALUES($1,$2,$3,'live') ON CONFLICT(provider_subject,scope) DO UPDATE SET updated_at=now() RETURNING id),membership AS (INSERT INTO hub_memberships(person_id,role) SELECT id,$4 FROM person ON CONFLICT DO NOTHING RETURNING person_id) SELECT id FROM person`,[identity.id,identity.primary_email,identity.display_name||identity.primary_email.split("@")[0],initialRole]);
  await ownerAccess(created[0].id,identity,scope);return created[0].id;
 }
