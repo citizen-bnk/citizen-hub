@@ -3,19 +3,38 @@ import {OverlayAction,RecordActions} from './RecordUI';
 import {subscriptionRecords} from '@/lib/investments';
 import {type Person} from '@/lib/contracts';
 import {investmentMoney as money,paymentState} from '@/lib/investment-display';
-import {query} from '@/lib/db';
 import {SubscriptionPayment} from './SubscriptionPayment';
 import {SubscriptionReview} from './SubscriptionReview';
 import {statusLabels,type SubscriptionStatus,paidStatus} from '@/lib/subscription-lifecycle';
+
 export async function SubscriptionPortfolio({person,reviewQueue=false,status='all'}:{person:Person;reviewQueue?:boolean;status?:string}){
- const records=await subscriptionRecords(person,reviewQueue),base=reviewQueue?'/subscriptions':'/subscriptions?mine=1';
+ const records=await subscriptionRecords(person,reviewQueue);
  const visible=records.filter(r=>status==='all'||(status==='paid'?paidStatus(r.status):status==='incomplete'?!['received','pending_conversion','declined','withdrawn'].includes(r.status):r.status===status));
- const payments=visible.length?await query<{subscription_id:string;amount:string;received_on:string;reference:string}>(`SELECT p.subscription_id,p.amount,p.received_on::text,p.reference FROM hub_subscription_payments p JOIN hub_subscription_requests r ON r.id=p.subscription_id WHERE r.scope=$1 AND r.id=ANY($2::uuid[]) AND p.voided_at IS NULL ORDER BY p.received_on DESC`,[person.scope,visible.map(r=>r.id)]):[];
- return <section id="subscriptions"><div className="capital-kpis"><a href={base}><strong>{records.length}</strong>Subscriptions</a><a href={base+(reviewQueue?'?':'&')+'status=paid'}><strong>{records.filter(r=>paidStatus(r.status)).length}</strong>Payments confirmed</a><a href={base+(reviewQueue?'?':'&')+'status=incomplete'}><strong>{records.filter(r=>!['received','pending_conversion','declined','withdrawn'].includes(r.status)).length}</strong>Awaiting completion</a><a href="/opportunities"><strong>+</strong>Subscribe for Shares</a></div><InvestmentCardGrid entries={visible.map(r=>({text:[r.display_name,r.title,r.certificate_reference,r.email].join(' '),amount:Number(r.unit_price)*r.units,currency:r.currency,payment:paymentState(Number(r.unit_price)*r.units,Number(r.recorded_receipts),r.status)}))}>{visible.map(r=>{
- const total=Math.round(Number(r.unit_price)*100)*r.units/100,received=Number(r.recorded_receipts),remaining=Math.max(0,total-received),inactive=['declined','withdrawn'].includes(r.status),reference=r.certificate_reference||'Reference pending';
- return <article className="investment-card" key={r.id}><header><div><strong>{reference}</strong><h3>{r.title}</h3>{reviewQueue&&<p>{r.display_name}</p>}<span className="chip">{statusLabels[r.status as SubscriptionStatus]||r.status}</span></div><RecordActions name={reference} actions={[{label:'Open full record',href:'/subscriptions/'+r.id},{label:'Top up investment',href:reviewQueue?'/subscriptions/new?person='+r.person_id:'/opportunities'},...(reviewQueue?[{label:'Review subscription',content:<SubscriptionReview id={r.id} version={r.version} status={r.status} agreement={r.agreement_link} payment={r.payment_link} invoice={r.invoice_link} receipt={r.receipt_link} certificate={r.certificate_preview_link}/>}]:[])]}/></header>
- <dl><div><dt>SAFE reference units</dt><dd>{r.units.toLocaleString()}</dd></div><div><dt>Price per unit</dt><dd>{money(r.unit_price,r.currency)}</dd></div><div><dt>Total investment</dt><dd>{money(total,r.currency)}</dd></div><div><dt>Amount paid</dt><dd>{money(received,r.currency)}</dd></div><div><dt>Remaining</dt><dd>{money(remaining,r.currency)}</dd></div></dl><p className="muted">{r.certificate_preview_link?'Certificate preview available · conversion pending':'Certificate preview not prepared'}</p>
- <div className="actions">{remaining>0&&!inactive&&r.display_name!==undefined&&<>{reviewQueue?<a className="button primary" href={'/subscriptions/'+r.id+'#record-payment'}>Record payment</a>:<OverlayAction label="Payment options / Upload proof" primary><SubscriptionPayment id={r.id} amount={money(remaining,r.currency)}/></OverlayAction>}</>}
- <OverlayAction label="View details"><h3>{reference} · {r.title}</h3><p>{r.units.toLocaleString()} SAFE reference units · {money(total,r.currency)}</p><p>{money(received,r.currency)} paid · {money(remaining,r.currency)} outstanding</p><p>{r.review_note}</p><h3>Payment history</h3>{payments.filter(p=>p.subscription_id===r.id).map((p,i)=><p key={i}>{p.received_on.slice(0,10)} · {p.reference} · {money(p.amount,r.currency)}</p>)}{!payments.some(p=>p.subscription_id===r.id)&&<p>No payments recorded.</p>}<h3>Documents</h3><div className="actions">{[[r.agreement_link,'SAFE agreement'],[r.invoice_link,'Invoice'],[r.receipt_link,'Receipt'],[r.certificate_preview_link,'Certificate preview']].filter(([url])=>url).map(([url,label])=><a className="button" key={label} href={url!} target="_blank" rel="noopener noreferrer">{label} ↗</a>)}</div><a className="button primary" href={'/subscriptions/'+r.id+'#subscription-documents'}>Manage document pack</a></OverlayAction></div></article>;
- })}</InvestmentCardGrid>{!visible.length&&<p>No subscriptions match this view. <a href="/opportunities">Subscribe for Shares</a></p>}<p className="muted">SAFE reference units are not issued ordinary shares. Payment and conversion are tracked separately.</p></section>;
+ return <section id="subscriptions" className="classic-subscriptions">
+  <InvestmentCardGrid entries={visible.map(r=>({text:[r.display_name,r.title,r.certificate_reference,r.email].join(' '),amount:Number(r.unit_price)*r.units,currency:r.currency,payment:paymentState(Number(r.unit_price)*r.units,Number(r.recorded_receipts),r.status)}))}>
+   {visible.map(r=>{
+    const total=Math.round(Number(r.unit_price)*100)*r.units/100,received=Number(r.recorded_receipts),remaining=Math.max(0,total-received);
+    const inactive=['declined','withdrawn'].includes(r.status),reference=r.certificate_reference||'Reference pending';
+    return <article className="classic-subscription-row" key={r.id}>
+     <div className="classic-subscription-main">
+      <span className="classic-subscription-icon" aria-hidden>▣</span>
+      <div><strong>{reference}</strong><span>{r.title}{reviewQueue?' · '+r.display_name:''}</span><small>{r.units.toLocaleString()} SAFE reference units · {money(r.unit_price,r.currency)} each</small></div>
+     </div>
+     <div className="classic-subscription-amount"><strong>{money(total,r.currency)}</strong><small>{money(received,r.currency)} paid</small></div>
+     <div className="classic-subscription-status"><span className="chip">{statusLabels[r.status as SubscriptionStatus]||r.status}</span>{remaining>0&&!inactive&&<small>{money(remaining,r.currency)} outstanding</small>}</div>
+     <div className="classic-subscription-actions">
+      <a className="button" href={'/subscriptions/'+r.id}>View details</a>
+      {remaining>0&&!inactive&&(reviewQueue?<a className="button primary" href={'/subscriptions/'+r.id+'#record-payment'}>Record payment</a>:<OverlayAction label="Pay now / upload proof" primary><SubscriptionPayment id={r.id} amount={money(remaining,r.currency)}/></OverlayAction>)}
+      <RecordActions name={reference} actions={[
+       {label:'Documents and agreement',href:'/subscriptions/'+r.id+'#subscription-documents'},
+       {label:'Top up investment',href:reviewQueue?'/subscriptions/new?person='+r.person_id:'/opportunities'},
+       ...(reviewQueue?[{label:'Review subscription',content:<SubscriptionReview id={r.id} version={r.version} status={r.status} agreement={r.agreement_link} payment={r.payment_link} invoice={r.invoice_link} receipt={r.receipt_link} certificate={r.certificate_preview_link}/>}]:[])
+      ]}/>
+     </div>
+    </article>;
+   })}
+  </InvestmentCardGrid>
+  {!visible.length&&<div className="classic-investor-empty"><strong>No matching subscriptions</strong><p>Clear the filters or explore the available share offer.</p><a className="button primary" href="/opportunities">Subscribe to Shares</a></div>}
+  <p className="muted">SAFE reference units are separate from confirmed issued shares.</p>
+ </section>;
 }
