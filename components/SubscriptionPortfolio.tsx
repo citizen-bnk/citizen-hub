@@ -27,7 +27,7 @@ export async function SubscriptionPortfolio({person,reviewQueue=false,status='al
     </article>;
    })}
   </InvestmentCardGrid>
-  {!visible.length&&<div className="classic-investor-empty"><strong>No matching subscriptions</strong><p>Clear the filters or explore the available share offer.</p><a className="button primary" href="/opportunities">Subscribe to Shares</a></div>}
+  {!visible.length&&<div className="classic-investor-empty"><span className="classic-empty-icon" aria-hidden>✦</span><strong>{records.length?'No matching subscriptions':'Start Your Investment Journey'}</strong><p>{records.length?'Clear the filters to see your subscriptions.':'You do not have a share subscription yet. Explore the available offer and begin when you are ready.'}</p><div className="classic-investor-actions"><a className="button primary" href="/opportunities">Subscribe to Shares</a><a className="button" href="/investors">Learn more</a></div></div>}
   <p className="muted">SAFE reference units are separate from confirmed issued shares.</p>
  </section>;
 }
