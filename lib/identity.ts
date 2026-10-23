@@ -3,11 +3,31 @@ import { query,ServiceIssue } from "./db";
 type Identity={id:string;primary_email:string;display_name?:string};
 function configuration(){
  let provider:Record<string,string>={};
- try {provider=(JSON.parse(process.env.AUTH_PROVIDERS||"[]") as {name:string;config:Record<string,string>}[]).find(p=>p.name==="stack-auth")?.config||{};}catch{ /* Explicit configuration below still applies. */ }
+ try {provider=(JSON.parse(process.env.AUTH_PROVIDERS||"[]") as {name:string;config:Record<string,string>}[]).find(p=>p.name==="stack-auth")?.config||{};}catch { /* Explicit configuration below still applies. */ }
  const id=process.env.STACK_PROJECT_ID||process.env.VITE_STACK_PROJECT_ID||provider.projectId;
  const key=process.env.STACK_PUBLISHABLE_CLIENT_KEY||process.env.VITE_STACK_PUBLISHABLE_CLIENT_KEY||provider.publishableClientKey;
  if(!id||!key)throw new ServiceIssue("IDENTITY_NOT_CONFIGURED","Citizen account sign-in is not configured.");
  return {"x-stack-project-id":id,"x-stack-publishable-client-key":key,"x-stack-access-type":"client","content-type":"application/json"};
+}
+function serverConfiguration(){
+ const id=process.env.STACK_PROJECT_ID||process.env.VITE_STACK_PROJECT_ID;
+ const key=process.env.STACK_SECRET_SERVER_KEY;
+ if(!id||!key)throw new ServiceIssue("IDENTITY_NOT_CONFIGURED","Citizen account registration is not configured.");
+ return {"x-stack-project-id":id,"x-stack-secret-server-key":key,"x-stack-access-type":"server","content-type":"application/json"};
+}
+export async function createIdentity(email:string,password:string,displayName:string):Promise<Identity>{
+ try{
+  const response=await fetch("https://api.stack-auth.com/api/v1/users",{method:"POST",headers:serverConfiguration(),body:JSON.stringify({primary_email:email,primary_email_auth_enabled:true,primary_email_verified:false,password,display_name:displayName}),cache:"no-store",signal:AbortSignal.timeout(10000)});
+  const data=await response.json().catch(()=>({})) as {id?:string;primary_email?:string|null;display_name?:string|null;message?:string;error?:string;code?:string};
+  if(!response.ok){
+   if(response.status===409||response.status===422||/already.?exists|duplicate|email.*(used|taken)/i.test(`${data.message||""} ${data.error||""} ${data.code||""}`)){
+    throw new ServiceIssue("ACCOUNT_EXISTS","That email may already have a Citizen account. Sign in with your existing account, or check your details.",409);
+   }
+   throw new ServiceIssue(response.status>=500?"IDENTITY_UNAVAILABLE":"REGISTRATION_REJECTED",response.status>=500?"Citizen account registration is temporarily unavailable. Please retry.":"Citizen account registration could not be completed. Check the details and try again.",response.status>=500?503:422);
+  }
+  if(!data.id)throw new ServiceIssue("IDENTITY_RESPONSE_INVALID","Citizen identity registration returned an incomplete response.");
+  return {id:data.id,primary_email:(data.primary_email||email).toLowerCase(),display_name:data.display_name||displayName};
+ }catch(error){if(error instanceof ServiceIssue)throw error;throw new ServiceIssue("IDENTITY_UNAVAILABLE","The Citizen identity service could not be reached. Please retry.");}
 }
 export async function authenticate(email:string,password:string):Promise<Identity>{
  try {

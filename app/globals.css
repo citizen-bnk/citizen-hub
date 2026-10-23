@@ -17,3 +17,14 @@
 @media(max-width:760px){.activity-row{flex-wrap:wrap}.activity-row .action-wrapper{margin-left:auto}.countdown strong{font-size:23px}.hero-art{opacity:.25}.member-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 .raising-progress{margin:25px 0 20px}.raising-progress .progress-track{height:13px;border:1px solid #4b1279;box-shadow:0 0 16px #ac17c329}.raising-progress .progress-track i{border-radius:12px}.raising-progress>strong{display:block;margin-top:16px;font-size:20px}.raising-progress>small{color:var(--muted)}.raising-stats{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #2c1744;padding-top:14px;gap:15px}.raising-stats strong,.raising-stats small{display:block}.raising-stats small{color:var(--muted);font-size:10px}.forecast-placeholder{position:relative;padding:25px 10px;text-align:center;min-height:150px}.forecast-placeholder p{font-size:11px;color:var(--muted);position:relative;margin-top:18px}.forecast-grid{position:absolute;inset:10px 0;background:repeating-linear-gradient(0deg,transparent 0 29px,#4b21751c 29px 30px),repeating-linear-gradient(90deg,transparent 0 59px,#4b21751c 59px 60px)}
+
+
+.register-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.access-card form label{display:grid;gap:7px;margin:16px 0;color:var(--text);font-size:13px}
+.access-card input{width:100%;min-width:0;border:1px solid var(--border);border-radius:9px;background:#0d1223;color:var(--text);padding:12px 13px;outline:none}
+.access-card input:focus{border-color:#ab90f5;box-shadow:0 0 0 3px #ab90f526}
+.register-optional,.register-note{color:var(--muted);font-size:12px}
+.register-existing{text-align:center;font-size:13px;margin-top:18px}
+.register-existing a{color:#c8b4ff;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.access-card .full{width:100%;margin-top:10px}
+@media(max-width:520px){.register-row{grid-template-columns:1fr;gap:0}}
