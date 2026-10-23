@@ -25,7 +25,7 @@ export const modules: {id:ModuleId;label:string;description:string;roles:Role[];
  {id:"profile",label:"Profile",description:"One Citizen identity with role-specific information.",roles:["candidate","customer","investor","shareholder","board_member","staff","back_office","admin","regulatory_reviewer"]},
 ];
 export const can = (roles: readonly string[],wanted:readonly string[]) => roles.includes("super_admin")||roles.some(role=>wanted.includes(role));
-export const registrationRole=(next:string|undefined):'candidate'|'investor'|'customer'=>/^\/banking-onboarding(?:[/?#]|$)/.test(safeReturn(next))?'customer':/^\/careers(?:[/?#]|$)/.test(safeReturn(next))?'candidate':'investor';
+export const registrationRole=(next:string|undefined):'candidate'|'investor'|'customer'=>/^\/(?:banking|mobile)-onboarding(?:[/?#]|$)/.test(safeReturn(next))?'customer':/^\/careers(?:[/?#]|$)/.test(safeReturn(next))?'candidate':'investor';
 export const canVote = (roles:readonly string[])=>roles.includes('board_member');
 export function safeReturn(value:string|null|undefined):string { return value && value.startsWith("/")&&!value.startsWith("//")&&!/[\\\u0000-\u001f\u007f]/.test(value)?value:"/"; }
 export function driveReference(raw:string):{url:string;fileId:string} {
