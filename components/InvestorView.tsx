@@ -1,18 +1,49 @@
+import {query} from '@/lib/db';
+import {Panel,Hero} from './BoardView';
+import {type Overview} from '@/lib/data';
+import {investmentMoney as money} from '@/lib/investment-display';
+import {type Person,can} from '@/lib/contracts';
+import {subscriptionRecords} from '@/lib/investments';
+import {portfolioTotals,capitalSummary,type HoldingSummary} from '@/lib/capital-summary';
+import {statusLabels,type SubscriptionStatus} from '@/lib/subscription-lifecycle';
 
-import { Panel,Hero,Metrics,Documents,Events,Empty } from "./BoardView";
-import { Icon } from "./Icon";
-import { money,type Overview } from "@/lib/data";
-import type { Person } from "@/lib/contracts";
-export function InvestorView({person,data}:{person:Person;data:Overview}){
- const valid=data.investments.filter(item=>item.status!=='cancelled');
- const total=valid.reduce((sum,item)=>sum+Number(item.amount),0),shares=valid.reduce((sum,item)=>sum+Number(item.shares),0);
- const issued=valid.filter(item=>item.status==='issued').reduce((sum,item)=>sum+item.shares,0);
- return <><Hero title={`Welcome back, ${person.display_name.split(' ')[0]}`} subtitle="Thank you for being part of Citizen Bank’s journey." description="Here is an overview of your investment and key updates." kind="investor"/>
- <div className="dashboard-layout"><div className="primary-column"><Metrics items={[{icon:'finance',label:'Total commitment',value:money(total),detail:'Your recorded investment commitments'},{icon:'investors',label:'Shares subscribed',value:shares.toLocaleString(),detail:'Across your subscriptions'},{icon:'check',label:'Shares issued',value:issued.toLocaleString(),detail:'Recorded issued ownership'},{icon:'documents',label:'Investment documents',value:String(data.documents.length),detail:'Permissioned Google Drive links'}]}/>
- <div className="content-grid"><Panel title="Capital Raising Progress"><p className="panel-subtitle">Institutional commitments · Licensing & setup</p><div className="raising-progress"><div className="progress-track"><i style={{width:`${Math.min(100,Number(data.capital.committed)/25000000*100)}%`}}/></div><strong>{money(data.capital.committed)}</strong><small>Recorded against a {money(25000000)} planning target</small></div><div className="raising-stats"><div><strong>{money(data.capital.received)}</strong><small>Received & issued</small></div><div><strong>{money(Math.max(0,25000000-Number(data.capital.committed)))}</strong><small>Remaining to planning target</small></div></div></Panel>
- <Panel title="Your Share Allocation"><div className="capital-display"><div className="donut" style={{'--progress':`${shares?issued/shares*100:0}%`} as React.CSSProperties}><span><strong>{shares.toLocaleString()}</strong><small>Shares subscribed</small></span></div><div><p><i className="legend-dot"/>Issued<br/><strong>{issued.toLocaleString()}</strong></p><p>Awaiting issuance<br/><strong>{(shares-issued).toLocaleString()}</strong></p></div></div></Panel>
- <Panel title="Investment Timeline"><div className="milestone-track"><span className={valid.length?'complete':''}>Interest</span><span className={valid.some(i=>['committed','received','issued'].includes(i.status))?'complete':''}>Commitment</span><span className={valid.some(i=>['received','issued'].includes(i.status))?'complete':''}>Receipt</span><span className={issued?'complete':''}>Issuance</span></div><p className="muted">Your recorded investment milestones. Future regulatory approval is not assumed.</p></Panel><Panel title="Expected Returns"><div className="forecast-placeholder"><div className="forecast-grid"/><span className="chip purple">Coming soon</span><p>Approved investment projections will appear here when available.</p></div></Panel>
- <Panel title="Your Investment Portfolio" className="span-2"><p className="panel-subtitle">Your subscriptions and ownership records</p>{valid.length?<div className="table-scroll"><table><thead><tr><th>Instrument</th><th>Shares</th><th>Commitment</th><th>Status</th></tr></thead><tbody>{valid.map(item=><tr key={item.id}><td>{item.instrument}</td><td>{item.shares.toLocaleString()}</td><td>{money(item.amount,item.currency)}</td><td><span className={`chip ${item.status==='issued'?'success':''}`}>{item.status}</span></td></tr>)}</tbody></table></div>:<Empty>No investment records yet. New subscription processing is coming soon.</Empty>}</Panel>
- <Panel title="Key Documents" link="/documents"><Documents data={data}/></Panel><Panel title="Institutional Updates" link="/communications">{data.notifications.slice(0,3).map(item=><a className="update-row" key={item.id} href={item.path}><span className="tone-icon tone-0"><Icon name="file"/></span><span><strong>{item.title}</strong><small>{item.body}</small></span></a>)}{!data.notifications.length&&<Empty>No updates yet.</Empty>}</Panel></div></div>
- <aside className="context-column"><Panel title="Investor Actions"><div className="investor-actions">{[{label:'View investment documents',icon:'documents',href:'/documents'},{label:'Update investor information',icon:'profile',href:'/profile'},{label:'View institutional updates',icon:'communications',href:'/communications'},{label:'Security and preferences',icon:'settings',href:'/settings'}].map((action,index)=><a className={`investor-action tone-${index%4}`} href={action.href} key={action.label}><Icon name={action.icon}/><span>{action.label}</span><span>›</span></a>)}<div className="investor-action disabled"><Icon name="file"/><span>View share certificate<small>Coming soon</small></span></div><div className="investor-action disabled"><Icon name="investors"/><span>Subscribe to next round<small>Coming soon</small></span></div><div className="investor-action disabled"><Icon name="communications"/><span>Send a message<small>Coming soon</small></span></div></div></Panel><Panel title="Investor Calendar"><Events data={data}/></Panel><Panel title="One Citizen Profile"><p className="muted">Your permitted roles share one identity. Update your common information once and manage each role’s responsibilities in its own workspace.</p><a className="button" href="/profile">Manage profile</a></Panel></aside></div></>;
+export async function InvestorView({person,data}:{person:Person;data:Overview}){
+ const [subscriptions,holdings,updates]=await Promise.all([
+  subscriptionRecords(person),
+  query<HoldingSummary>("SELECT id,person_id,status,facts FROM hub_corporate_records WHERE person_id=$1 AND scope=$2 AND kind='holding' AND status<>'archived'",[person.id,person.scope]),
+  query<{id:string;title:string;summary:string;status:string}>("SELECT id,title,summary,status FROM hub_projects WHERE scope=$1 AND published AND allowed_roles && $2::text[] ORDER BY updated_at DESC LIMIT 4",[person.scope,person.roles])
+ ]);
+ const active=subscriptions.filter(s=>!['withdrawn','declined'].includes(s.status));
+ const totals=portfolioTotals(active),capital=capitalSummary(holdings);
+ const documents=data.documents.filter(d=>['safe','certificate','certificate_preview','invoice','receipt','bonus_agreement'].includes(d.category));
+ const admin=can(person.roles,['admin']),board=person.roles.includes('board_member'),boardInvestment=data.investments[0];
+ return <div className="classic-investor">
+  <Hero title="My Investment Portfolio" subtitle={`Welcome back, ${person.display_name.split(' ')[0]}`} kind="investor"/>
+  <div className="classic-investor-actions">
+   <a className="button primary" href="/opportunities">Subscribe to Shares</a>
+   <a className="button" href="/subscriptions?mine=1">View My Subscriptions</a>
+  </div>
+  <section className="classic-news"><h2>Latest News &amp; Achievements</h2><p>Company progress and announcements</p><div>{updates.map(update=><a href="/projects" key={update.id}><strong>{update.title}</strong><span>{update.summary}</span><small>{update.status.replaceAll('_',' ')}</small></a>)}{!updates.length&&<p>New company updates will appear here when published.</p>}</div></section>
+  <div className="classic-investor-summary">
+   <Panel title="Share subscriptions">
+    {active.length?<><div className="classic-investor-numbers"><div><span>SAFE subscriptions</span><strong>{active.length}</strong></div><div><span>Reference units</span><strong>{active.reduce((sum,s)=>sum+s.units,0).toLocaleString()}</strong></div></div>
+     {totals.map(total=><div className="classic-investor-money" key={total.currency}><div><span>Subscribed</span><strong>{money(total.committed,total.currency)}</strong></div><div><span>Paid</span><strong>{money(total.paid,total.currency)}</strong></div><div><span>Outstanding</span><strong>{money(total.outstanding,total.currency)}</strong></div></div>)}
+     <div className="classic-investor-recent">{active.slice(0,3).map(s=><a href={'/subscriptions/'+s.id} key={s.id}><span><strong>{s.certificate_reference||s.title}</strong><small>{s.units.toLocaleString()} SAFE reference units · {statusLabels[s.status as SubscriptionStatus]||s.status}</small></span><span>View →</span></a>)}</div>
+     <a className="button" href="/subscriptions?mine=1">View all subscriptions</a></>:
+     <div className="classic-investor-empty"><strong>No subscriptions yet</strong><p>Explore the available offer and start a subscription.</p><a className="button primary" href="/opportunities">Subscribe to Shares</a></div>}
+   </Panel>
+   {board&&<Panel title="Board Investment">{boardInvestment?<><p>{boardInvestment.instrument}</p><div className="classic-investor-numbers"><div><span>Amount invested</span><strong>{money(boardInvestment.amount,boardInvestment.currency)}</strong></div><div><span>Status</span><strong>{boardInvestment.status.replaceAll('_',' ')}</strong></div></div></>:<p>No active board investment is recorded.</p>}<a className="button" href="/holdings">View investment details</a></Panel>}
+   {!board&&<Panel title="My shareholdings">
+    <div className="classic-investor-numbers"><div><span>Confirmed issued shares</span><strong>{capital.issued.toLocaleString()}</strong></div><div><span>Pending reconciliation</span><strong>{capital.pending}</strong></div></div>
+    <p className="muted">SAFE reference units become issued shares only after an approved conversion.</p>
+    <a className="button" href="/holdings">View my holdings</a>
+   </Panel>}
+  </div>
+  <div className="classic-investor-bottom">
+   <Panel title="Investor data room"><p>Review company materials and investment evidence.</p><a className="button" href="/dataroom">Open data room</a></Panel>
+   <Panel title="Investment documents"><p>{documents.length} document{documents.length===1?'':'s'} available to your account.</p><a className="button" href="/document-centre">View documents</a></Panel>
+   {board&&<Panel title="My shareholdings"><div className="classic-investor-numbers"><div><span>Confirmed issued shares</span><strong>{capital.issued.toLocaleString()}</strong></div><div><span>Pending reconciliation</span><strong>{capital.pending}</strong></div></div><a className="button" href="/holdings">View holdings</a></Panel>}
+  </div>
+  {admin&&<Panel title="Investor administration"><div className="classic-investor-actions"><a className="button primary" href="/subscriptions/new">Add investor or subscribe on behalf</a><a className="button" href="/subscriptions">Review subscriptions</a><a className="button" href="/cap-table">Manage cap table</a></div></Panel>}
+ </div>;
 }
