@@ -27,5 +27,5 @@ export async function GET(request:Request){try{
   agreement_link:r.agreement_link,invoice_link:r.invoice_link,receipt_link:r.receipt_link,
  };});
  const summary={total_shares_owned:records.filter(r=>r.payment_status==='paid').reduce((n,r)=>n+r.num_shares,0),total_investment_amount:records.reduce((n,r)=>n+r.total_amount,0),active_subscriptions:records.length,pending_payments:records.reduce((n,r)=>n+r.amount_remaining,0),certificates_issued:records.filter(r=>r.certificate_number).length};
- return NextResponse.json({offers,summary,subscriptions:records,has_admin_created_subscriptions:false},{headers:cors(origin)});
+ return NextResponse.json({offers,roles:person?.roles||[],summary,subscriptions:records,has_admin_created_subscriptions:false},{headers:cors(origin)});
  }catch(error){return websiteFailure(request,error);}}
