@@ -18,6 +18,8 @@ export default async function Module({params,searchParams}:{params:Promise<{modu
  const {module}=await params;const item=modules.find(item=>item.id===module);if(!item)notFound();
  let person:Person|null;try{person=await currentPerson();}catch(error){if(error instanceof ServiceIssue)return <Recovery message={error.message} code={error.code}/>;throw error;}
  if(!person)redirect(`/login?next=${encodeURIComponent('/'+module)}`);
+ if(module==='investors')redirect('/administration');
+ if(module==='board')redirect('/appointments');
  if(module==='investors'&&person.roles.includes('customer')&&!can(person.roles,item.roles))redirect('/opportunities');
  if(!['profile','settings'].includes(module)&&!can(person.roles,item.roles))return <WorkspaceShell person={person} active={module}><Recovery title="This workspace is not available to your account" message={`Your account needs ${item.roles.map(role=>role.replaceAll('_',' ')).join(' or ')} access to open ${item.label}. An administrator can review your assigned roles. Your other workspaces remain available.`} code="WORKSPACE_ACCESS_DENIED"/></WorkspaceShell>;
  if(module==='documents')redirect('/document-centre');

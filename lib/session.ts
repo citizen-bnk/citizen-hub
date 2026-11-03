@@ -4,6 +4,7 @@ import { randomBytes,createHash } from "node:crypto";
 import { cache } from "react";
 import { query,ServiceIssue } from "./db";
 import type { Person } from "./contracts";
+import {hasHubAccess} from './hub-access';
 const name="citizen_hub_session";
 const digest=(token:string)=>createHash("sha256").update(token).digest("hex");
 export const currentPerson=cache(async():Promise<Person|null>=>{
@@ -13,6 +14,7 @@ export const currentPerson=cache(async():Promise<Person|null>=>{
  FROM hub_sessions s JOIN hub_people p ON p.id=s.person_id WHERE s.token_hash=$1 AND s.expires_at>now() AND s.revoked_at IS NULL AND p.active`,[digest(token)]);
  const person=rows[0]||null;
  if(person?.scope==="demonstration"&&process.env.DEMO_MODE!=="true")return null;
+ if(person&&!hasHubAccess(person.roles))return null;
  return person;
 });
 export async function requirePerson(){const person=await currentPerson();if(!person)throw new ServiceIssue("SIGN_IN_REQUIRED","Your session has ended. Sign in again to continue.",401);return person;}
