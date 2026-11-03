@@ -17,6 +17,7 @@ const input=z.discriminatedUnion('mode',[
 export async function POST(request:Request){try{
  requireOrigin(request);const person=await requirePerson();const raw=await request.text();if(raw.length>95000)return Response.json({error:'Start a new conversation; this one is too long.',code:'VALIDATION_FAILED'},{status:422});
  const data=input.parse(JSON.parse(raw));
+ if(['task','document_draft','investment_draft'].includes(data.mode))throw new ServiceIssue('ORIGINAL_WEBSITE_WORKFLOW_REQUIRED','Investment documents and transactions now use the original Citizen Bank website. Open its investment administration to continue; no Hub record was changed.',409);
  if(data.mode==='task')return Response.json(await planAITask(person,data.instruction),{headers:{'Cache-Control':'no-store'}});
  if(data.mode==='document_draft'){
   if(!can(person.roles,['admin']))throw new ServiceIssue('DOCUMENT_ADMIN_REQUIRED','Only administrators can prepare company documents.',403);

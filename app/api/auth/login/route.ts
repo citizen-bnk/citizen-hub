@@ -6,7 +6,7 @@ import { authenticate,personForIdentity } from "@/lib/identity";
 import { createSession } from "@/lib/session";
 import { query,ServiceIssue } from "@/lib/db";
 import { requireOrigin,failure } from "@/lib/http";
-import {verifiedOwner} from '@/lib/role-policy';
+import {verifiedOwner,verifiedStaff} from '@/lib/role-policy';
 import {hasHubAccess} from '@/lib/hub-access';
 export async function POST(request:Request){try{
  requireOrigin(request);
@@ -26,7 +26,8 @@ export async function POST(request:Request){try{
  if(!isDemonstration&&email.endsWith('@demo.citizenbank.test'))throw new ServiceIssue('USE_DEMONSTRATION_SELECTOR','Choose the demonstration account selector for a fictional account.',422);
  const identity=await authenticate(email,password);
  const existing=await query<{id:string}>('SELECT id FROM hub_people WHERE provider_subject=$1 AND scope=$2 AND active',[identity.id,isDemonstration?'demonstration':'live']);
- const id=existing[0]?.id||(verifiedOwner(identity,'live')?await personForIdentity(identity,false,'customer'):null);
+ const institutional=verifiedOwner(identity,'live')||verifiedStaff(identity,'live');
+ const id=institutional?await personForIdentity(identity,false,verifiedStaff(identity,'live')?'candidate':'customer'):existing[0]?.id;
  if(!id)throw new ServiceIssue('HUB_STAFF_ACCESS_REQUIRED','Citizen Hub is for authorised staff and administrators. Open your investor or board portal on the Citizen Bank website.',403);
  const memberships=await query<{role:string}>('SELECT role FROM hub_memberships WHERE person_id=$1 AND active',[id]);
  if(!hasHubAccess(memberships.map(item=>item.role)))

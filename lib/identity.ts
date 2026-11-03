@@ -1,6 +1,6 @@
 import "server-only";
 import { query,ServiceIssue } from "./db";
-import {verifiedOwner} from './role-policy';
+import {verifiedOwner,verifiedStaff} from './role-policy';
 type Identity={id:string;primary_email:string;primary_email_verified?:boolean;display_name?:string};
 export function identityConfiguration(){
  let provider:Record<string,string>={};
@@ -27,15 +27,15 @@ export async function authenticate(email:string,password:string):Promise<Identit
 export async function personForIdentity(identity:Identity,demonstration:boolean,initialRole:'candidate'|'investor'|'customer'='investor'){
  const scope=demonstration?"demonstration":"live";
  const existing=await query<{id:string}>("SELECT id FROM hub_people WHERE provider_subject=$1 AND scope=$2 AND active",[identity.id,scope]);
- if(existing[0]){await ownerAccess(existing[0].id,identity,scope);return existing[0].id;}
+ if(existing[0]){await institutionalAccess(existing[0].id,identity,scope);return existing[0].id;}
  if(demonstration)throw new ServiceIssue("ACCOUNT_NOT_SEEDED","This demonstration account has not been provisioned.");
  if(identity.primary_email_verified!==true)throw new ServiceIssue('EMAIL_VERIFICATION_REQUIRED','Verify your email using the link sent when you registered, then sign in to continue.',403);
  // Only explicitly pending, investor-only records may be claimed by a verified email owner.
  const pending=await query<{id:string}>(`WITH claimed AS (UPDATE hub_people p SET provider_subject=$1,updated_at=now() WHERE scope='live' AND active AND provider_subject='pending-investor:'||id::text AND lower(email)=lower($2) AND NOT EXISTS(SELECT 1 FROM hub_memberships m WHERE m.person_id=p.id AND m.role<>'investor') AND (SELECT count(*) FROM hub_people candidate WHERE candidate.scope='live' AND lower(candidate.email)=lower($2))=1 RETURNING id),audit AS (INSERT INTO hub_audit(actor_id,action,resource_type,resource_id,scope) SELECT id,'investor.identity_claimed','person',id::text,'live' FROM claimed) SELECT id FROM claimed`,[identity.id,identity.primary_email]);
- if(pending[0]){await ownerAccess(pending[0].id,identity,scope);return pending[0].id;}
+ if(pending[0]){await institutionalAccess(pending[0].id,identity,scope);return pending[0].id;}
  const created=await query<{id:string}>(`WITH person AS (INSERT INTO hub_people(provider_subject,email,display_name,scope) VALUES($1,$2,$3,'live') ON CONFLICT(provider_subject,scope) DO UPDATE SET updated_at=now() RETURNING id),membership AS (INSERT INTO hub_memberships(person_id,role) SELECT id,$4 FROM person ON CONFLICT DO NOTHING RETURNING person_id) SELECT id FROM person`,[identity.id,identity.primary_email,identity.display_name||identity.primary_email.split("@")[0],initialRole]);
- await ownerAccess(created[0].id,identity,scope);return created[0].id;
+ await institutionalAccess(created[0].id,identity,scope);return created[0].id;
 }
 
-async function ownerAccess(id:string,identity:Identity,scope:string){if(!verifiedOwner(identity,scope))return;
- await query(`WITH assigned AS (INSERT INTO hub_memberships(person_id,role) SELECT id,'super_admin' FROM hub_people WHERE id=$1 AND scope='live' AND provider_subject=$2 AND lower(email)=lower($3) ON CONFLICT(person_id,role) DO UPDATE SET active=true WHERE NOT hub_memberships.active RETURNING person_id) INSERT INTO hub_audit(actor_id,action,resource_type,resource_id,scope) SELECT person_id,'identity.owner_access_verified','person',person_id::text,'live' FROM assigned`,[id,identity.id,identity.primary_email]);}
+async function institutionalAccess(id:string,identity:Identity,scope:string){const role=verifiedOwner(identity,scope)?'super_admin':verifiedStaff(identity,scope)?'staff':null;if(!role)return;
+ await query(`WITH assigned AS (INSERT INTO hub_memberships(person_id,role) SELECT id,$4 FROM hub_people WHERE id=$1 AND scope='live' AND provider_subject=$2 AND lower(email)=lower($3) ON CONFLICT(person_id,role) DO UPDATE SET active=true WHERE NOT hub_memberships.active RETURNING person_id) INSERT INTO hub_audit(actor_id,action,resource_type,resource_id,scope) SELECT person_id,'identity.institutional_access_verified','person',person_id::text,'live' FROM assigned`,[id,identity.id,identity.primary_email,role]);}
