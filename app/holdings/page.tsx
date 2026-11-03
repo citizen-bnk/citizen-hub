@@ -1,3 +1,2 @@
-import {redirect} from 'next/navigation';import {currentPerson} from '@/lib/session';import {moduleAccess} from '@/lib/access';import {WorkspaceShell} from '@/components/WorkspaceShell';import {OwnHoldings} from '@/components/OwnHoldings';import {Hero} from '@/components/BoardView';import {Recovery} from '@/components/Recovery';
-export const dynamic='force-dynamic';
-export default async function Holdings(){const p=await currentPerson();if(!p)redirect('/login?next=/holdings');if(!moduleAccess(p.roles,'investors'))return <Recovery code="INVESTOR_ACCESS_REQUIRED" message="Investor access is required."/>;return <WorkspaceShell person={p} active="investors"><Hero title="My holdings" subtitle="Your own register records"/>{await OwnHoldings({person:p})}</WorkspaceShell>;}
+import { redirect } from 'next/navigation';
+export default function LegacyEntry(){ redirect((process.env.NEXT_PUBLIC_WEBSITE_URL || 'https://citizenbank.co.ls') + '/invest'); }
