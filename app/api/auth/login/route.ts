@@ -7,6 +7,7 @@ import { createSession } from "@/lib/session";
 import { query,ServiceIssue } from "@/lib/db";
 import { requireOrigin,failure } from "@/lib/http";
 import {verifiedOwner,verifiedStaff} from '@/lib/role-policy';
+import {canonicalProfile} from '@/lib/canonical-profile';
 import {hasHubAccess} from '@/lib/hub-access';
 export async function POST(request:Request){try{
  requireOrigin(request);
@@ -29,7 +30,7 @@ export async function POST(request:Request){try{
  const institutional=verifiedOwner(identity,'live')||verifiedStaff(identity,'live');
  const id=institutional?await personForIdentity(identity,false,verifiedStaff(identity,'live')?'candidate':'customer'):existing[0]?.id;
  if(!id)throw new ServiceIssue('HUB_STAFF_ACCESS_REQUIRED','Citizen Hub is for authorised staff and administrators. Open your investor or board portal on the Citizen Bank website.',403);
- const memberships=await query<{role:string}>('SELECT role FROM hub_memberships WHERE person_id=$1 AND active',[id]);
+ const memberships=isDemonstration?await query<{role:string}>('SELECT role FROM hub_memberships WHERE person_id=$1 AND active',[id]):(await canonicalProfile(identity.id)).roles.map(role=>({role}));
  if(!hasHubAccess(memberships.map(item=>item.role)))
   throw new ServiceIssue('HUB_STAFF_ACCESS_REQUIRED','Citizen Hub is for authorised staff and administrators. Open your investor or board portal on the Citizen Bank website.',403);
  await createSession(id);
