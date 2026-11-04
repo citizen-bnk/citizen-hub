@@ -1,0 +1,45 @@
+'use client';
+import {DriveAttachment} from './DriveAttachment';
+
+import {OverlayAction} from '@/components/RecordUI';
+import { useState } from 'react';
+export type EditableCorporate = {
+    id: string;
+    kind: string;
+    title: string;
+    person_id: string | null;
+    facts: Record<string, unknown>;
+    status: string;
+    source_link: string;
+    source_date: string | null;
+    review_note: string;
+    version: number;
+    updated_by: string | null;
+};
+export type PersonOption = {
+    id: string;
+    display_name: string;
+    email: string;
+};
+const text = (v: unknown) => typeof v === 'string' || typeof v === 'number' ? String(v) : '';
+export function CorporateEditor({ record: r, kind = 'stakeholder', people, actor }: {
+    record?: EditableCorporate;
+    kind?: 'stakeholder' | 'holding';
+    people: PersonOption[];
+    actor: string;
+}) {
+    const [busy, setBusy] = useState(false), [issue, setIssue] = useState(''), [paymentBasis, setPaymentBasis] = useState('settlement'), holding = (r?.kind || kind) === 'holding';
+    async function post(data: unknown) { setBusy(true); setIssue(''); try {
+        const response = await fetch('/api/corporate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }), d = await response.json();
+        if (!response.ok)
+            throw Error(d.error);
+        window.location.reload();
+    }
+    catch (e) {
+        setIssue(e instanceof Error ? e.message : 'Unable to save. Retry.');
+    }
+    finally {
+        setBusy(false);
+    } }
+    return <div><form className="readiness-form" onSubmit={e => { e.preventDefault(); const f = new FormData(e.currentTarget); void post({ action: 'save', ...(r ? { id: r.id, version: r.version } : {}), kind: holding ? 'holding' : 'stakeholder', name: f.get('name'), email: f.get('email'), phone: f.get('phone'), relationship: f.get('relationship') || '', quantity: Number(f.get('quantity') || 0), instrument: f.get('instrument') || 'SAFE', person_id: f.get('person_id'), status: f.get('status'), source_link: f.get('source_link'), source_date: f.get('source_date'), review_note: f.get('review_note') }); }}><label>{holding ? 'Shareholder name' : 'Investor name'}<input name="name" required minLength={3} defaultValue={text(r?.facts.holder || r?.facts.name || r?.title)} placeholder="Example: Lerato Mokoena"/></label><label>Contact email<input name="email" type="email" defaultValue={text(r?.facts.email)} placeholder="Example: lerato@example.com"/></label><label>Contact number<input name="phone" defaultValue={text(r?.facts.phone)} placeholder="Example: +266 5800 1234"/></label>{holding ? <><label>Reported shares<input name="quantity" type="number" min={0} max={1000000000000} step={1} required defaultValue={text(r?.facts.quantity) || '0'} placeholder="Example: 1000"/></label><label>Share class<input name="instrument" required defaultValue={text(r?.facts.instrument)} placeholder="Example: Ordinary Class B"/></label></> : <label>Relationship<input name="relationship" defaultValue={text(r?.facts.relationship)} placeholder="Example: SAFE subscriber / prospective investor"/></label>}<label>Linked Citizen account<select name="person_id" defaultValue={r?.person_id || ''}><option value="">Unlinked — contact record only</option>{people.map(p => <option key={p.id} value={p.id}>{p.display_name} · {p.email}</option>)}</select></label><p className="muted">Contact changes do not change login credentials or grant roles. Confirm account linkage against identity evidence.</p><label>Google Drive evidence<DriveAttachment name="source_link" defaultValue={r?.source_link} required/></label><label>Source date<input name="source_date" type="date" defaultValue={r?.source_date?.slice(0, 10) || ''}/></label><label>Working status<select name="status" defaultValue={r?.status === 'confirmed' ? 'work_in_progress' : r?.status || 'work_in_progress'}><option value="work_in_progress">Pending reconciliation</option><option value="conflict">Discrepancy</option><option value="archived">Archive record</option></select></label><label>Correction / reconciliation reason<textarea name="review_note" required minLength={5} maxLength={3000} defaultValue={r?.review_note} placeholder="Example: Corrected the quantity against the September register; approval pending."/></label><button className="button primary" disabled={busy}>{busy ? 'Saving…' : 'Save for review'}</button></form>{r&&['work_in_progress','conflict'].includes(r.status)&&<p className="muted">The super administrator concludes reconciliation from this record’s status link.</p>}{issue && <p role="alert" className="inline-error">{issue} Correct the information or reload before retrying.</p>}</div>;
+}

@@ -1,0 +1,6 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {applicantDetails,detailsFromProfile} from '../lib/subscription-details';
+import {paymentAuthorisation} from '../lib/payment-authorisation';
+test('Subscriber document details reuse their profile and accept only the three intended fields',()=>{const details=detailsFromProfile({display_name:'Lerato Mokoena',street_address:'12 Main Road',city:'Maseru',country:'Lesotho',role_profiles:{investor:{identity_reference:'TEST-123'}}});assert.equal(details.address,'12 Main Road, Maseru, Lesotho');assert.ok(applicantDetails.safeParse(details).success);assert.equal(applicantDetails.safeParse({...details,person_id:'forged-owner'}).success,false);assert.equal(applicantDetails.safeParse({...details,address:''}).success,false);});
+test('Digital settlement does not require a file link, but still requires administrator confirmation',()=>{assert.ok(paymentAuthorisation.safeParse({basis:'settlement',proof_link:'',confirmed:true}).success);assert.ok(paymentAuthorisation.safeParse({basis:'settlement',confirmed:true}).success);assert.equal(paymentAuthorisation.safeParse({basis:'settlement',confirmed:false}).success,false);assert.equal(paymentAuthorisation.safeParse({basis:'settlement',proof_link:'https://example.com/forged',confirmed:true}).success,false);});

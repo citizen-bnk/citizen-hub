@@ -1,0 +1,16 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {roleChange,verifiedOwner,verifiedStaff} from '../lib/role-policy';
+test('owner bootstrap requires a verified primary identity in the live scope',()=>{assert.equal(verifiedOwner({primary_email:' PHAFANEP@gmail.com ',primary_email_verified:true},'live'),true);for(const scope of ['live','demonstration']){assert.equal(verifiedOwner({primary_email:'phafanep@gmail.com'},scope),false);assert.equal(verifiedOwner({primary_email:'another@example.com',primary_email_verified:true},scope),false);}assert.equal(verifiedOwner({primary_email:'phafanep@gmail.com',primary_email_verified:true},'demonstration'),false);});
+test('staff bootstrap requires a verified meshthang identity in live scope',()=>{assert.equal(verifiedStaff({primary_email:'meshthang@gmail.com',primary_email_verified:true},'live'),true);assert.equal(verifiedStaff({primary_email:'meshthang@gmail.com',primary_email_verified:false},'live'),false);assert.equal(verifiedStaff({primary_email:'meshthang@gmail.com',primary_email_verified:true},'demonstration'),false);});
+test('role changes require a known nonempty role set, version, reason and explicit confirmation',()=>{const good={roles:['investor','shareholder'],version:1,reason:'Approved access update',confirmed:true};assert.deepEqual(roleChange.parse(good).roles,good.roles);for(const bad of [{...good,roles:[]},{...good,roles:['owner']},{...good,version:0},{...good,confirmed:false},{...good,reason:''},{...good,email:'ignored@example.com'}])assert.equal(roleChange.safeParse(bad).success,false);});
+
+test('nominated owner is bound to the exact provider subject, not an email claim',()=>{
+ const previous=process.env.INSTITUTIONAL_SUPER_ADMIN_SUBJECT;
+ process.env.INSTITUTIONAL_SUPER_ADMIN_SUBJECT='owner-subject';
+ try{
+  assert.equal(verifiedOwner({id:'owner-subject',primary_email:'phafanep@gmail.com',primary_email_verified:false},'live'),true);
+  assert.equal(verifiedOwner({id:'another-subject',primary_email:'phafanep@gmail.com',primary_email_verified:true},'live'),false);
+  assert.equal(verifiedOwner({id:'owner-subject',primary_email:'phafanep@gmail.com'},'demonstration'),false);
+ }finally{if(previous===undefined)delete process.env.INSTITUTIONAL_SUPER_ADMIN_SUBJECT;else process.env.INSTITUTIONAL_SUPER_ADMIN_SUBJECT=previous;}
+});

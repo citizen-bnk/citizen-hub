@@ -1,0 +1,2 @@
+import {canReconcile} from '@/lib/reconciliation-policy';
+export function ReconciliationStatus({id,status,roles}:{id:string;status:string;roles:readonly string[]}){const pending=['work_in_progress','conflict'].includes(status),label=status==='confirmed'?'Reconciled':status==='archived'?'Archived':status==='conflict'?'Discrepancy — reconcile':'Pending reconciliation';return pending&&canReconcile(roles)?<a className="button" href={'/reconciliation/'+id}>{label}</a>:<span className="chip">{label}</span>;}

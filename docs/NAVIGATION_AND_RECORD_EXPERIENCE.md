@@ -1,0 +1,10 @@
+# Workspace and record interaction rules
+
+- Sidebar: Home, Invest, Governance, Careers, Business, Documents and Administration. Each workspace appears only when it contains an action permitted by the current roles. Dashboard links and counters use the same role checks; APIs retain their existing server authorization.
+- Each workspace dashboard links to its related services. Counts are clickable shortcuts to the corresponding records. Licensing counters select the matching priority/status; subscription counters select paid or incomplete groups.
+- Lists provide search, status filters, sorting and pagination where the shared record-list component is used. Query state remains in the URL through reloads. List pages show a Back action. Global creation actions appear above the list and open overlays.
+- One available row action remains visible. Multiple actions use a three-dot disclosure menu. Record edits, evidence, application reviews and short actions use native modal dialogs with focus containment, Escape, Close and accessible titles. Record history, related lists and longer subscription processes keep dedicated pages.
+- Existing workflow controls, independent approvals, signature authorisation, live/demo isolation and optimistic version checks remain authoritative. Opening a dialog never authorises a write.
+- Switching into banking uses the existing Hub identity. A first banking handoff adds only the person's own customer membership, preserves their other roles and refuses a previously revoked customer membership. Core creates/reuses the linked banking projection; Hub credentials remain the password authority. Cross-site browser requests cannot trigger first-time automatic enrollment. Banking remains pre-licensing with fictional-money interfaces.
+
+Acceptance checks: role-specific dashboards, direct restricted URLs, row-menu/dialog operation, Escape and focus recovery, search/filter persistence, mobile/tablet widths, clickable count destinations and first-time/repeated banking handoff without duplicate profiles.
