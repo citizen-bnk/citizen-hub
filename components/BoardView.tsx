@@ -31,7 +31,6 @@ export function BoardView({person,data}:{person:Person;data:Overview}){
 }
 export function QuickActions({person}:{person:Person}){return <Panel title="Quick Actions"><div className="quick-grid">{[{label:'Board administration',icon:'calendar',href:'/appointments'},{label:'Link document',icon:'file',href:'/documents'},{label:'Investment administration',icon:'investors',href:'/administration'},{label:'My profile',icon:'profile',href:'/profile'},{label:'Communications',icon:'communications',href:'/communications'},{label:'Ask Citizen AI',icon:'ai',href:'/ai'}].filter(action=>pathAccess(person.roles,action.href)).map((action,index)=><a className={`quick-action tone-${index%4}`} key={action.label} href={action.href}><Icon name={action.icon} size={26}/><span>{action.label}</span></a>)}</div></Panel>;}
 export function ExecutiveView({person,data}:{person:Person;data:Overview}){
- const website=(process.env.NEXT_PUBLIC_WEBSITE_URL||'https://citizenbank.co.ls').replace(/\/$/,'');
  return <>
   <Hero title={`Welcome, ${person.display_name.split(' ')[0]}`} subtitle="Your institutional workspace" kind="executive"/>
   <div className="dashboard-layout"><div className="primary-column">
@@ -41,7 +40,7 @@ export function ExecutiveView({person,data}:{person:Person;data:Overview}){
     {icon:'documents',label:'Shared documents',value:String(data.documents.length),detail:'Available to your Hub role',href:'/document-centre'},
    ]}/>
    <div className="content-grid">
-    <Panel title="Investor and board administration" className="span-2"><p>The original Citizen Bank website holds the current investment and board records. Historical Hub records are held for reconciliation.</p><div className="button-row"><a className="button primary" href={website+'/back-office-subscriptions'}>Manage website subscriptions</a><a className="button" href={website+'/back-office-board-members'}>Manage board appointments</a></div></Panel>
+    <Panel title="Investor and board administration" className="span-2"><p>Manage the same investor and board records from your Hub workspace.</p><div className="button-row">{person.roles.some(role=>['admin','super_admin'].includes(role))&&<a className="button primary" href="/administration">Manage investments</a>}{person.roles.includes('super_admin')&&<a className="button" href="/appointments">Manage board appointments</a>}</div></Panel>
     <Panel title="Regulatory licensing"><p>Prepare requirements, evidence and readiness for the licence application.</p><a className="button" href="/licensing">View requirements</a></Panel>
     <Panel title="Recent activity" link="/communications">{data.notifications.slice(0,3).map(n=><div className="activity-row" key={n.id}><strong>{n.title}</strong><small>{n.body}</small></div>)}{!data.notifications.length&&<Empty>No recent activity.</Empty>}</Panel>
     <Panel title="Knowledge and evidence" link="/documents"><Documents data={data}/></Panel>
