@@ -4,7 +4,7 @@ import { requirePerson } from '@/lib/session';
 import { institutionalRequest } from '@/lib/institutional-operations';
 
 const requestSchema = z.object({
-  operation: z.enum(['investment.list','investment.subscribe','investment.payment','investment.update',
+  operation: z.enum(['investment.list','investment.subscribe','investment.payment','investment.update','investment.provision','investment.portfolio','investment.certificate',
     'cap_table.list','board.list','board.candidates','board.appoint','board.update']),
   data: z.record(z.unknown()).optional(),
 });
@@ -15,6 +15,7 @@ export async function POST(request: Request) {
     const person = await requirePerson();
     const input = requestSchema.parse(await request.json());
     const result = await institutionalRequest(person, input.operation, input.data);
+    if (result instanceof Response) return result;
     return Response.json(result, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
     return failure(error);

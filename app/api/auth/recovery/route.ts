@@ -23,10 +23,9 @@ export async function POST(req:Request){try{
   const email=input.email.toLowerCase();
   // Fictional identities have no recoverable mailbox. Do not change their shared demo credentials.
   if(email.endsWith('@demo.citizenbank.test'))return result(sent);
-  const base=recoveryOrigin(req.url,process.env.ACCOUNT_RECOVERY_ORIGIN||'https://hub.citizenbank.co.ls');
-  const row=(await query<{id:string}>("INSERT INTO hub_recovery_requests(email,expires_at) VALUES($1,now()+interval '1 hour') RETURNING id",[email]))[0];
-  const response=await fetch('https://api.stack-auth.com/api/v1/auth/password/send-reset-code',{method:'POST',headers,body:JSON.stringify({email,callback_url:base+'/reset-password?request_id='+row.id}),cache:'no-store',signal:AbortSignal.timeout(15000)});
-  if(!response.ok)throw new ServiceIssue('RECOVERY_UNAVAILABLE','The identity service could not send a recovery email. Retry, or return to sign-in.');
+  const website=process.env.NEXT_PUBLIC_WEBSITE_URL||'https://citizenbank.co.ls';
+  const response=await fetch(new URL('/api/platform/invitation-onboarding',website),{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://hub.citizenbank.co.ls'},body:JSON.stringify({action:'recover',email}),cache:'no-store',signal:AbortSignal.timeout(30000)});
+  if(!response.ok)throw new ServiceIssue('RECOVERY_UNAVAILABLE','Account recovery could not be requested. Retry, or return to sign-in.');
   return result(sent);
  }
  const record=(await query<{email:string;provider_subject:string|null;expires_at:string;completed_at:string|null}>(`SELECT r.email,r.expires_at,r.completed_at,p.provider_subject FROM hub_recovery_requests r LEFT JOIN hub_people p ON lower(p.email)=r.email AND p.scope='live' AND p.active WHERE r.id=$1`,[input.request_id]))[0];

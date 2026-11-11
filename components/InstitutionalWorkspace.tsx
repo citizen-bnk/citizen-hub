@@ -2,15 +2,16 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
+import { InvestorPortfolio } from './InvestorPortfolio';
 
 type Mode = 'investment' | 'board' | 'cap_table';
 type Subscription = { subscription_id: string; full_name: string; share_class: string; num_shares: number;
   total_amount: number; amount_paid: number; status: string; created_by_admin: boolean };
 type Member = { user_id: string; full_name: string; email: string; position: string; term_end_date: string; status: string; version: number };
 type Candidate = Pick<Member,'user_id'|'full_name'|'email'>;
-type Investor = Candidate & { phone: string | null; investment_purpose: string | null; version: number };
-type Holding = { source_row: number; holder: string; kind: string; reference: string | null; quantity: number;
-  source_status: string; reconciliation_status: string; source_date: string };
+type Investor = Candidate & { person_id:string; contact_status:string; activation_status:string; phone: string | null; investment_purpose: string | null; version: number };
+type Holding = { source_id: string; source_sheet: string; source_row: number; holder: string; kind: string; reference: string | null; quantity: number;
+  source_status: string; reconciliation_status: string; source_date: string; review_note?: string | null; units_under_review?: number | null };
 type Workspace = { subscriptions?: Subscription[]; members?: Member[]; investors?: Investor[];
   records?: Holding[]; positions?: {code:string;label:string}[]; offer?: {min_shares:number;price_per_share:number} };
 const titles = {investment:'Investors and subscriptions',board:'Board appointments',cap_table:'Cap table reconciliation'};
@@ -38,6 +39,7 @@ export function InstitutionalWorkspace({ mode }: { mode: Mode }) {
   const [search, setSearch] = useState('');
   const [kind, setKind] = useState('member_register');
   const [action, setAction] = useState<'subscribe'|'appoint'|'edit'|'payment'|'investor'>();
+  const [portfolio,setPortfolio] = useState<string>();
   const [investor, setInvestor] = useState<Investor>();
   const [selected, setSelected] = useState<Member>();
   const [subscription, setSubscription] = useState<Subscription>();
@@ -139,8 +141,8 @@ export function InstitutionalWorkspace({ mode }: { mode: Mode }) {
         {s.created_by_admin && s.status!=='cancelled' && s.amount_paid<s.total_amount && <button className="button" onClick={()=>{setSubscription(s);open('payment');}}>Record payment</button>}
       </article>)}
       {!data.subscriptions?.length && <p>No subscriptions recorded.</p>}
-      <h2>Registered investors</h2>
-      {(data.investors||[]).filter(p=>matches(p.full_name,p.email)).map(p=><article className="activity-row" key={p.user_id}><strong>{p.full_name}</strong><small>{p.email}</small><button className="button" onClick={()=>{setInvestor(p);open('investor');}}>Edit investor details</button></article>)}
+      <h2>Investor profiles</h2>
+      {(data.investors||[]).filter(p=>matches(p.full_name,p.email)).map(p=><article className="activity-row" key={p.user_id}><strong>{p.full_name}</strong><small>{p.email||'Contact details needed'} · {p.activation_status}</small><button className="button" onClick={()=>setPortfolio(p.person_id)}>View portfolio</button><button className="button" onClick={()=>{setInvestor(p);open('investor');}}>Edit investor details</button></article>)}
       <p><a className="button" href="/cap-table">Open cap table reconciliation</a></p>
     </>}
     {mode==='board' && data && <>
@@ -151,15 +153,17 @@ export function InstitutionalWorkspace({ mode }: { mode: Mode }) {
       {!data.members?.length && <p>No board appointments recorded.</p>}
     </>}
     {mode==='cap_table' && data && <>
-      <p>Working records for reconciliation. Only the members register contributes to the working share total. Subscription and SAFE schedules are separate evidence.</p>
+      <p>Working records for reconciliation. Only the members register contributes to the working share total. Subscription and SAFE schedules are separate evidence. The live Class A, B and C allocation is managed separately.</p>
       <p><strong>{units(records.filter(r=>r.kind==='member_register').reduce((sum,r)=>sum+Number(r.quantity),0))}</strong> shares in the working register</p>
       <label>Source schedule <select value={kind} onChange={e=>setKind(e.target.value)}>{Object.entries(labels).map(([id,label])=><option value={id} key={id}>{label}</option>)}</select></label>
-      {records.filter(r=>r.kind===kind && matches(r.holder,r.reference)).map(r=><article className="activity-row" key={r.source_row}>
+      {records.filter(r=>r.kind===kind && matches(r.holder,r.reference)).map(r=><article className="activity-row" key={JSON.stringify([r.source_id,r.source_sheet,r.source_row])}>
         <strong>{r.holder}</strong><small>{units(r.quantity)} {r.kind==='member_register'?'shares':'source units'} · {r.reference||'No reference'} · {r.source_date} / row {r.source_row}</small>
         <small>{r.source_status} · {r.reconciliation_status.replaceAll('_',' ')}</small>
+        {r.review_note && <p>{r.units_under_review ? <strong>{units(r.units_under_review)} units under review. </strong> : null}{r.review_note}</p>}
       </article>)}
       {!records.length && <p>No working register has been loaded.</p>}
     </>}
+    {portfolio&&<InvestorPortfolio personId={portfolio} onClose={()=>setPortfolio(undefined)}/>}
     <dialog ref={dialog} className="panel" onCancel={event=>{event.preventDefault();if(!busy)setAction(undefined);}}>
       {action && <>
         <h2>{action==='subscribe'?'Subscribe on behalf':action==='payment'?'Record verified payment':action==='appoint'?'Appoint board member':action==='investor'?'Edit investor details':'Edit appointment'}</h2>

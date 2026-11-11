@@ -23,6 +23,9 @@ export async function institutionalRequest(person: Person, operation: string, da
     method: 'POST', body, cache: 'no-store', redirect: 'error', signal: AbortSignal.timeout(25000),
     headers: { 'X-Citizen-Hub-Token': token, 'Content-Type': 'application/json' },
   });
+  if (response.ok && response.headers.get('content-type')?.startsWith('application/pdf')) {
+    return new Response(await response.arrayBuffer(), {headers:{'Content-Type':'application/pdf','Cache-Control':'private, no-store'}});
+  }
   const result = await response.json().catch(() => null);
   if (!response.ok || !result) {
     const detail = response.status < 500 && typeof result?.detail === 'string' ? result.detail : 'The save or data request could not be confirmed. Retry.';
