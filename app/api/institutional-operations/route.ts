@@ -4,7 +4,7 @@ import { requirePerson } from '@/lib/session';
 import { institutionalRequest } from '@/lib/institutional-operations';
 
 const requestSchema = z.object({
-  operation: z.enum(['investment.list','investment.subscribe','investment.payment','investment.update','investment.provision','investment.portfolio','investment.certificate',
+  operation: z.enum(['invitation.resend','invitation.cancel','investment.directory','investment.list','investment.subscribe','investment.payment','investment.update','investment.provision','investment.portfolio','investment.certificate',
     'cap_table.list','board.list','board.candidates','board.appoint','board.update']),
   data: z.record(z.unknown()).optional(),
 });

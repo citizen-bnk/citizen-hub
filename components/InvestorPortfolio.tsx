@@ -24,7 +24,7 @@ async function action(operation:string,data:Record<string,unknown>) {
   return response;
 }
 
-export function InvestorPortfolio({personId,onClose}:{personId:string;onClose:()=>void}) {
+export function InvestorPortfolio({personId,onClose,transport=action}:{personId:string;onClose:()=>void;transport?:(operation:string,data:Record<string,unknown>)=>Promise<Response>}) {
   const dialog=useRef<HTMLDialogElement>(null);
   const [portfolio,setPortfolio]=useState<Portfolio>();
   const [error,setError]=useState('');
@@ -35,7 +35,7 @@ export function InvestorPortfolio({personId,onClose}:{personId:string;onClose:()
   async function load() {
     setError('');
     try {
-      const response=await action('investment.portfolio',{person_id:personId});
+      const response=await transport('investment.portfolio',{person_id:personId});
       setPortfolio(await response.json());
     } catch(cause) {setError(cause instanceof Error?cause.message:'Portfolio unavailable.');}
   }
@@ -49,7 +49,7 @@ export function InvestorPortfolio({personId,onClose}:{personId:string;onClose:()
   async function certificate(record:Record<string,unknown>) {
     setBusy(true);setError('');
     try {
-      const response=await action('investment.certificate',{person_id:personId,...record});
+      const response=await transport('investment.certificate',{person_id:personId,...record});
       const blob=await response.blob();
       if(!blob.type.startsWith('application/pdf'))throw new Error('The certificate response was invalid.');
       setPdf(URL.createObjectURL(blob));
@@ -60,7 +60,7 @@ export function InvestorPortfolio({personId,onClose}:{personId:string;onClose:()
   async function provision() {
     setBusy(true);setError('');
     try {
-      const response=await action('investment.provision',{person_id:personId});
+      const response=await transport('investment.provision',{person_id:personId});
       const result=await response.json();
       setNotice(result.message||'Account ready.');
       await load();

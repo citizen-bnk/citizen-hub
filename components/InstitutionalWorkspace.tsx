@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
+import { InvestorDirectory } from './InvestorDirectory';
 import { InvestorPortfolio } from './InvestorPortfolio';
 
 type Mode = 'investment' | 'board' | 'cap_table';
@@ -141,8 +142,6 @@ export function InstitutionalWorkspace({ mode }: { mode: Mode }) {
         {s.created_by_admin && s.status!=='cancelled' && s.amount_paid<s.total_amount && <button className="button" onClick={()=>{setSubscription(s);open('payment');}}>Record payment</button>}
       </article>)}
       {!data.subscriptions?.length && <p>No subscriptions recorded.</p>}
-      <h2>Investor profiles</h2>
-      {(data.investors||[]).filter(p=>matches(p.full_name,p.email)).map(p=><article className="activity-row" key={p.user_id}><strong>{p.full_name}</strong><small>{p.email||'Contact details needed'} · {p.activation_status}</small><button className="button" onClick={()=>setPortfolio(p.person_id)}>View portfolio</button><button className="button" onClick={()=>{setInvestor(p);open('investor');}}>Edit investor details</button></article>)}
       <p><a className="button" href="/cap-table">Open cap table reconciliation</a></p>
     </>}
     {mode==='board' && data && <>
@@ -163,6 +162,7 @@ export function InstitutionalWorkspace({ mode }: { mode: Mode }) {
       </article>)}
       {!records.length && <p>No working register has been loaded.</p>}
     </>}
+    {mode==='investment' && <InvestorDirectory request={request} accountUrl={website+'/admin-users'} onPortfolio={setPortfolio}/>}
     {portfolio&&<InvestorPortfolio personId={portfolio} onClose={()=>setPortfolio(undefined)}/>}
     <dialog ref={dialog} className="panel" onCancel={event=>{event.preventDefault();if(!busy)setAction(undefined);}}>
       {action && <>
