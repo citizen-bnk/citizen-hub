@@ -2,6 +2,7 @@ import 'server-only';
 import {createHash,createHmac} from 'node:crypto';
 import {ServiceIssue} from './db';
 import type {Person} from './contracts';
+import { sharedServiceRecovery } from './shared-service-recovery';
 
 type Canonical = {
   roles: Person['roles'];
@@ -21,10 +22,14 @@ export async function canonicalProfile(subject: string, update?: Record<string,u
     method, headers:{'X-Citizen-Profile-Token':payload+'.'+signature,'Content-Type':'application/json'},
     body:update?body:undefined,cache:'no-store',signal:AbortSignal.timeout(12000),
   });
-  if (!response.ok) throw new ServiceIssue('SHARED_PROFILE_UNAVAILABLE',
+  if (!response.ok) {
+    const recovery = response.status === 503 && sharedServiceRecovery(await response.json().catch(() => null));
+    if (recovery) throw new ServiceIssue(recovery.code, recovery.message, 503);
+    throw new ServiceIssue('SHARED_PROFILE_UNAVAILABLE',
     response.status===404?'Sign in on the Citizen Bank website first to link your shared profile.':
     response.status===403?'Your shared Citizen access is restricted. Contact an administrator.':
     'Your shared Citizen profile could not be loaded. Retry.',response.status===404||response.status===403?403:503);
+  }
   const result = await response.json() as Canonical & {provider_subject?:string};
   if (result.provider_subject !== subject || !Array.isArray(result.roles)
       || !result.roles.every(role=>typeof role==='string') || typeof result.email !== 'string'

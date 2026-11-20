@@ -2,6 +2,7 @@ import 'server-only';
 import { createHash, createHmac } from 'node:crypto';
 import type { Person } from './contracts';
 import { ServiceIssue } from './db';
+import { sharedServiceRecovery } from './shared-service-recovery';
 
 export async function institutionalRequest(person: Person, operation: string, data: object = {}) {
   if (person.scope !== 'live' || !person.roles.some(role => ['admin', 'super_admin'].includes(role))) {
@@ -28,6 +29,8 @@ export async function institutionalRequest(person: Person, operation: string, da
   }
   const result = await response.json().catch(() => null);
   if (!response.ok || !result) {
+    const recovery = response.status === 503 && sharedServiceRecovery(result);
+    if (recovery) throw new ServiceIssue(recovery.code, recovery.message, 503);
     const detail = response.status < 500 && typeof result?.detail === 'string' ? result.detail : 'The save or data request could not be confirmed. Retry.';
     throw new ServiceIssue('WORKSPACE_REQUEST_FAILED', detail, response.ok ? 502 : response.status);
   }
