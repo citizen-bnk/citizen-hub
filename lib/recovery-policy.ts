@@ -1,5 +1,7 @@
-export type RecoveryAction='retry'|'sign_in'|'workspace'|'opportunities'|'reload'|'back'|'cancel';
+import {isServiceUnavailable} from './service-availability';
+export type RecoveryAction='status'|'retry'|'sign_in'|'workspace'|'opportunities'|'reload'|'back'|'cancel';
 export function recoveryActions(code:string):RecoveryAction[]{
+ if(isServiceUnavailable({code}))return ['status','back','cancel'];
  if(code==='SIGN_IN_REQUIRED')return ['sign_in','back','cancel'];
  if(code==='OPPORTUNITY_CHANGED')return ['opportunities','back','cancel'];
  if(code==='INVESTOR_ROLE_REQUIRED'||code==='INVESTMENT_ACCESS_REQUIRED')return ['opportunities','workspace','cancel'];

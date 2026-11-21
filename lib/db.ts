@@ -1,4 +1,5 @@
 import "server-only";
+import {isDatabaseQuota,serviceMessage} from "./service-availability";
 import { neon } from "@neondatabase/serverless";
 import {normaliseDates} from './db-values';
 export async function query<T=Record<string,unknown>>(statement:string,params:unknown[]=[]):Promise<T[]> {
@@ -9,6 +10,7 @@ export async function query<T=Record<string,unknown>>(statement:string,params:un
   try { return normaliseDates(await neon(url,{fetchOptions:{signal:AbortSignal.timeout(6000)}}).query(statement,params)) as T[]; }
   catch(error) { const issue=error as {code?:string;name?:string;sourceError?:{name?:string;cause?:{code?:string}}};const code=issue.code;
    console.error("[citizen] database request failed", {code:code||"NETWORK",category:issue.name,networkCode:issue.sourceError?.cause?.code});
+   if(isDatabaseQuota(error))throw new ServiceIssue('DATA_QUOTA_EXHAUSTED',serviceMessage);
    if(!code&&readOnly&&attempt===0)continue;
    if(code==='P0001')throw new ServiceIssue('CERTIFICATE_NUMBER_CONFLICT','This certificate series cannot be allocated. Check the original CB number belongs to this investor and has not already been used, then reload.',409);
    if(code==='23505')throw new ServiceIssue('RECORD_CONFLICT','This record already exists. Reload to see its current state.',409);

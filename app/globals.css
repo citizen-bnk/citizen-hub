@@ -65,3 +65,6 @@
 .classic-subscriptions .classic-investor-empty{padding:42px 18px;border:2px dashed #d9deea;background:#fff}.classic-subscriptions .classic-investor-empty>strong{font-size:23px}.classic-subscriptions .classic-investor-empty>p{max-width:460px;margin:12px auto 24px}.classic-subscriptions .classic-investor-empty .classic-investor-actions{justify-content:center}.classic-empty-icon{display:grid;place-items:center;width:75px;height:75px;margin:0 auto 22px;border-radius:50%;background:#efe9f8;color:#6d52a2;font-size:42px}
 
 .investor-portfolio-dialog {width:min(920px,94vw);max-height:90dvh;overflow:auto}.investor-portfolio-dialog::backdrop {background:rgba(8,5,27,.65)}
+
+/* Reserve room for the service notice above the fixed navigation rail. */
+.side-rail{top:calc(84px + var(--citizen-notice-height,0px));}
