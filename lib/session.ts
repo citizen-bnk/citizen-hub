@@ -4,6 +4,8 @@ import { randomBytes,createHash } from "node:crypto";
 import { cache } from "react";
 import { query,ServiceIssue } from "./db";
 import type { Person } from "./contracts";
+import {withCanonicalProfile} from './canonical-profile';
+import {hasHubAccess} from './hub-access';
 const name="citizen_hub_session";
 const digest=(token:string)=>createHash("sha256").update(token).digest("hex");
 export const currentPerson=cache(async():Promise<Person|null>=>{
@@ -11,11 +13,16 @@ export const currentPerson=cache(async():Promise<Person|null>=>{
  if(!token)return null;
  const rows=await query<Person>(`SELECT p.*,COALESCE((SELECT array_agg(role) FROM hub_memberships WHERE person_id=p.id AND active),ARRAY[]::text[]) AS roles
  FROM hub_sessions s JOIN hub_people p ON p.id=s.person_id WHERE s.token_hash=$1 AND s.expires_at>now() AND s.revoked_at IS NULL AND p.active`,[digest(token)]);
- const person=rows[0]||null;
+ const person=rows[0]?await withCanonicalProfile(rows[0]):null;
  if(person?.scope==="demonstration"&&process.env.DEMO_MODE!=="true")return null;
+ if(person&&!hasHubAccess(person.roles)){
+  if(rows[0]&&hasHubAccess(rows[0].roles))throw new ServiceIssue('ROLE_RECONCILIATION_REQUIRED','Your Hub access must be reviewed in website User Management. Sign in on the Citizen Bank website and ask a super administrator to review your roles.',403);
+  return null;
+ }
  return person;
 });
 export async function requirePerson(){const person=await currentPerson();if(!person)throw new ServiceIssue("SIGN_IN_REQUIRED","Your session has ended. Sign in again to continue.",401);return person;}
+export async function requireRecentPerson(purpose="card recovery"){const person=await requirePerson(),token=(await cookies()).get(name)?.value;const rows=await query('SELECT person_id FROM hub_sessions WHERE token_hash=$1 AND person_id=$2 AND created_at>now()-interval \'5 minutes\' AND revoked_at IS NULL AND expires_at>now()',[digest(token||''),person.id]);if(!rows.length)throw new ServiceIssue('SIGN_IN_REQUIRED','Sign in again before '+purpose+'. Your authentication must be recent.',401);return person;}
 export async function createSession(personId:string){
  const token=randomBytes(32).toString("base64url");
  await query("INSERT INTO hub_sessions(token_hash,person_id,expires_at) VALUES($1,$2,now()+interval '8 hours')",[digest(token),personId]);

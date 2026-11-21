@@ -1,0 +1,9 @@
+'use client';
+import {useState} from 'react';
+import {InvestmentCapture,type InvestmentDraft,type LedgerOffer} from './InvestmentLedger';
+import type {PersonOption} from './CorporateEditor';
+import {OverlayAction} from './RecordUI';
+export function AIInvestmentDraft({people,offers,holdings}:{people:PersonOption[];offers:LedgerOffer[];holdings:{id:string;title:string;person_id:string|null}[]}){
+ const [instruction,setInstruction]=useState(''),[draft,setDraft]=useState<InvestmentDraft|null>(null),[busy,setBusy]=useState(false),[issue,setIssue]=useState('');
+ return <OverlayAction label="Prepare investor transaction"><form className="readiness-form" onSubmit={async e=>{e.preventDefault();setBusy(true);setIssue('');setDraft(null);try{const r=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'investment_draft',instruction}),signal:AbortSignal.timeout(60000)}),d=await r.json();if(!r.ok)throw Error(`${d.error} (${d.code})`);setDraft(d.draft);}catch(error){setIssue(error instanceof Error?error.message:'Draft unavailable.');}finally{setBusy(false);}}}><label>Describe the investment<textarea required minLength={10} maxLength={4000} value={instruction} onChange={e=>setInstruction(e.target.value)} placeholder="Example: Lechalaba subscribes R1,000 at the approved R10 price, with 100 bonus reference shares after full payment."/></label><button className="button primary" disabled={busy}>{busy?'Preparing…':'Prepare preview'}</button></form>{issue&&<p role="alert">{issue} <a href="/cap-table">Use cap-table controls</a></p>}{draft&&<InvestmentCapture key={JSON.stringify(draft)} people={people} offers={offers} initial={draft} holdings={holdings}/>}<p className="muted">AI prepares a draft. You select the investor and confirm before saving. Record verified receipts separately.</p></OverlayAction>;
+}

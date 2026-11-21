@@ -1,0 +1,3 @@
+import {z} from 'zod';
+export const applicantDetails=z.object({legal_name:z.string().trim().min(3).max(200),identity_reference:z.string().trim().min(3).max(100),address:z.string().trim().min(5).max(500)}).strict();
+export function detailsFromProfile(person:{display_name:string;street_address?:string;city?:string;country?:string|null;role_profiles?:Record<string,Record<string,string>>}){return {legal_name:person.role_profiles?.investor?.legal_name||person.display_name,identity_reference:person.role_profiles?.investor?.identity_reference||'',address:person.role_profiles?.investor?.address||[person.street_address,person.city,person.country].filter(Boolean).join(', ')};}

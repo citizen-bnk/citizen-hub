@@ -1,0 +1,8 @@
+import {cents,decimal} from './investment-ledger-policy';
+import {z} from 'zod';
+export const documentKinds=['invoice','safe','certificate_preview','receipt','bonus_agreement'] as const;
+export type DocumentKind=typeof documentKinds[number];
+export function requiredDocuments(received:string,bonus:number):DocumentKind[]{return ['invoice','safe','certificate_preview',...(Number(received)>0?['receipt' as const]:[]),...(bonus>0?['bonus_agreement' as const]:[])];}
+export const documentAgentReview=z.object({subscription_id:z.string().uuid(),source_version:z.number().int().positive(),kinds:z.array(z.enum(documentKinds)).min(3).max(5),issues:z.array(z.string().max(400)).max(5)}).strict();
+export function validateDocumentReview(value:unknown,id:string,version:number,kinds:DocumentKind[]){const review=documentAgentReview.parse(value);if(review.subscription_id!==id||review.source_version!==version||new Set(review.kinds).size!==review.kinds.length||[...review.kinds].sort().join(',')!==[...kinds].sort().join(','))throw Error('The document agent returned a different record or document pack.');return review;}
+export function paymentSummary(currency:string,total:string,received:string,payments:{amount:string;received_on:string;reference:string}[]){const balance=decimal(cents(total)-cents(received));return `Subscription ${currency} ${total}. Recorded receipts ${currency} ${decimal(cents(received))}. Outstanding ${currency} ${balance}. `+(payments.length?payments.map(p=>`${currency} ${p.amount} received ${p.received_on.slice(0,10)}, reference ${p.reference}`).join('; ')+'.':'No payment has been recorded.');}

@@ -1,0 +1,7 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {paymentSummary,requiredDocuments,validateDocumentReview} from '../lib/document-agent-policy';
+const id='00000000-0000-4000-8000-000000000001';
+test('Unpaid subscriptions get drafts and invoice, never a receipt',()=>{assert.deepEqual(requiredDocuments('0',0),['invoice','safe','certificate_preview']);});
+test('A received instalment and conditional allocation add receipt and agreement',()=>{assert.deepEqual(requiredDocuments('500',100),['invoice','safe','certificate_preview','receipt','bonus_agreement']);});
+test('The agent cannot substitute a record, version or document pack',()=>{const kinds=requiredDocuments('0',0),review={subscription_id:id,source_version:3,kinds,issues:[]};assert.equal(validateDocumentReview(review,id,3,kinds).source_version,3);for(const change of [{subscription_id:'00000000-0000-4000-8000-000000000002'},{source_version:2},{kinds:[...kinds,'receipt']},{kinds:[...kinds,'safe']},{execute:'approve_payment'}])assert.throws(()=>validateDocumentReview({...review,...change},id,3,kinds));});
+test('Payment wording reflects recorded instalments and never assumes full settlement',()=>{const text=paymentSummary('ZAR','1000.00','500.00',[{amount:'500.00',received_on:'2026-10-08',reference:'CB36'}]);assert.match(text,/Outstanding ZAR 500.00/);assert.match(text,/2026-10-08, reference CB36/);assert.doesNotMatch(text,/fully paid/i);});
