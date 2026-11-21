@@ -1,6 +1,6 @@
 import {modules,can,type Role} from './contracts';
 export const workspaces=[
- {id:'invest',label:'Invest',icon:'investors',modules:['administration'],extras:[{label:'Cap table',path:'/cap-table',roles:['admin']}]},
+ {id:'invest',label:'Invest',icon:'investors',modules:['administration'],extras:[{label:'Invited investors',path:'/administration#invitations',roles:['admin']},{label:'Invite investor',path:'/administration?invite=1',roles:['admin']},{label:'Cap table',path:'/cap-table',roles:['admin']}]},
  {id:'governance',label:'Governance',icon:'board',modules:['appointments'],extras:[]},
  {id:'careers',label:'Careers',icon:'careers',modules:['recruitment'],extras:[]},
  {id:'business',label:'Business',icon:'executive',modules:['executive','projects','licensing','review','finance','risk','people'],extras:[]},

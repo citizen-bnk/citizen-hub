@@ -135,15 +135,16 @@ export function InstitutionalWorkspace({ mode }: { mode: Mode }) {
     {notice && <p role="status">{notice}</p>}
     {!data && !error && <p role="status">Loading records…</p>}
     {data && <label>Search <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Name, email or reference"/></label>}
-    {mode==='investment' && data && <>
-      <h2>Subscriptions</h2>
+    {mode==='investment' && <InvestorDirectory request={request} accountUrl={website+'/admin-users'} onPortfolio={setPortfolio}/>}
+    {mode==='investment' && data && <details>
+      <summary className="button">Subscriptions & payments ({data.subscriptions?.length||0})</summary>
       {(data.subscriptions||[]).filter(s=>matches(s.full_name,s.subscription_id)).map(s=><article className="activity-row" key={s.subscription_id}>
         <strong>{s.full_name}</strong><small>{s.subscription_id} · {units(s.num_shares)} shares · {s.status} · {money(s.amount_paid)} of {money(s.total_amount)} paid</small>
         {s.created_by_admin && s.status!=='cancelled' && s.amount_paid<s.total_amount && <button className="button" onClick={()=>{setSubscription(s);open('payment');}}>Record payment</button>}
       </article>)}
       {!data.subscriptions?.length && <p>No subscriptions recorded.</p>}
       <p><a className="button" href="/cap-table">Open cap table reconciliation</a></p>
-    </>}
+    </details>}
     {mode==='board' && data && <>
       {(data.members||[]).filter(m=>matches(m.full_name,m.email,m.position)).map(m=><article className="activity-row" key={m.user_id}>
         <strong>{m.full_name}</strong><small>{positions.find(p=>p.code===m.position)?.label||m.position} · {m.status} · {m.term_end_date||'Term end pending'}</small>
@@ -162,7 +163,6 @@ export function InstitutionalWorkspace({ mode }: { mode: Mode }) {
       </article>)}
       {!records.length && <p>No working register has been loaded.</p>}
     </>}
-    {mode==='investment' && <InvestorDirectory request={request} accountUrl={website+'/admin-users'} onPortfolio={setPortfolio}/>}
     {portfolio&&<InvestorPortfolio personId={portfolio} onClose={()=>setPortfolio(undefined)}/>}
     <dialog ref={dialog} className="panel" onCancel={event=>{event.preventDefault();if(!busy)setAction(undefined);}}>
       {action && <>
